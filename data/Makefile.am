@@ -1,3 +1,4 @@
+SUBDIRS=
 westondatadir = $(datadir)/weston
 
 dist_westondata_DATA =				\
@@ -16,4 +17,8 @@ wayland_icon_png = wayland.png
 
 wayland.png : $(top_srcdir)/data/wayland.svg
 	$(RSVG_CONVERT) -w 128 -h 128 $< -o $@
+endif
+
+if HAVE_EFL
+SUBDIRS+= vkbd-efl
 endif

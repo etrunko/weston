@@ -31,6 +31,7 @@ text-cursor-position-protocol.c
 text-protocol.c
 transformed
 view
+vkbd-efl
 weston-desktop-shell
 weston-info
 weston-screensaver

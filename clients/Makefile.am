@@ -162,6 +162,17 @@ weston_keyboard_SOURCES = 			\
 	input-method-client-protocol.h
 weston_keyboard_LDADD = libtoytoolkit.la
 
+if HAVE_EFL
+libexec_PROGRAMS += vkbd-efl
+vkbd_efl_SOURCES=				\
+	vkbd-efl.c				\
+	input-method-protocol.c			\
+	input-method-client-protocol.h
+
+vkbd_efl_CFLAGS = @EFL_CFLAGS@ -DPKGLIBEXECDIR='"$(pkglibexecdir)"'
+vkbd_efl_LDADD  = @EFL_LIBS@
+endif
+
 weston_simple_im_SOURCES = 			\
 	weston-simple-im.c			\
 	input-method-protocol.c			\

@@ -328,6 +328,19 @@ if test "x$enable_libunwind" = xyes; then
 fi
 AM_CONDITIONAL(HAVE_LIBUNWIND, [test "x$enable_libunwind" = xyes])
 
+PKG_CHECK_MODULES(EFL, [eina evas ecore-evas ecore-wayland edje], [have_efl=yes], [have_efl=no])
+
+if test "x$have_efl" = xyes; then
+        AC_DEFINE(HAVE_EFL, 1, [Build EFL support])
+
+        AC_ARG_WITH(edje-cc,
+                    AS_HELP_STRING([--with-edje-cc=PATH], [Path to edje_cc binary]),
+                    [EDJE_CC_PATH=${withval}], [EDJE_CC_PATH=$($PKG_CONFIG --variable=prefix edje)/bin/edje_cc])
+        AC_SUBST([EDJE_CC_PATH])
+fi
+
+AM_CONDITIONAL(HAVE_EFL, [test "x$have_efl" = xyes])
+
 if test "x$WESTON_NATIVE_BACKEND" = "x"; then
 	WESTON_NATIVE_BACKEND="drm-backend.so"
 fi
@@ -353,6 +366,7 @@ AC_CONFIG_FILES([Makefile
 		 clients/Makefile
 		 wcap/Makefile
 		 data/Makefile
+		 data/vkbd-efl/Makefile
 		 protocol/Makefile
 		 man/Makefile
 		 tests/Makefile])
