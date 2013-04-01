@@ -110,284 +110,193 @@ collections {
                }
             }
          }
-
-         part {
-            name: "numeric";
-            type: GROUP;
-            source: "numeric";
-            description {
-               state: "default" 0.0;
-               rel1 {
-                  relative: 0.5 1.0;
-                  offset: -84 -234;
-               }
-               rel2 {
-                  relative: 0.5 1.0;
-                  offset: 84 -10;
-               }
-               visible: 0;
-            }
-         }
-
-
-         part {
-            name: "alphanum_clip";
-            type: RECT;
-            description {
-               state: "default" 0.0;
-               rel1 {
-                  relative: 0.0 0.0;
-                  offset: 0 0;
-               }
-               rel2 {
-                  relative: 1.0 1.0;
-                  offset: -1 -1;
-               }
-            }
-            description {
-               state: "hidden" 0.0;
-               inherit: "default" 0.0;
-               visible: 0;
-            }
-         }
-
-         part {
-            name: "alphanum";
-            type: GROUP;
-            source: "alphanum";
-            clip_to: "alphanum_clip";
-            description {
-               state: "default" 0.0;
-               min: 685 234;
-               max: 685 234;
-               rel1 {
-                  relative: 0.5  1.0;
-                  offset: -342 -264;
-               }
-               rel2 {
-                  relative: 0.5 1.0;
-                  offset: 342 -10;
-               }
-            }
-         }
-
-
-         part {
-            name: "special-1_clip";
-            type: RECT;
-            description {
-               state: "default" 0.0;
-               rel1 {
-                  relative: 0.0 0.0;
-                  offset: 0 0;
-               }
-               rel2 {
-                  relative: 1.0 1.0;
-                  offset: -1 -1;
-               }
-            }
-            description {
-               state: "hidden" 0.0;
-               inherit: "default" 0.0;
-               visible: 0;
-            }
-         }
-
-         part {
-            name: "special-1";
-            type: GROUP;
-            source: "special-1";
-            clip_to: "special-1_clip";
-            description {
-               state: "default" 0.0;
-               min: 685 234;
-               max: 685 234;
-               rel1 {
-                  relative: 0.5  1.0;
-                  offset: -342 -264;
-               }
-               rel2 {
-                  relative: 0.5 1.0;
-                  offset: 342 -10;
-               }
-            }
-         }
-
-         part {
-            name: "special-2_clip";
-            type: RECT;
-            description {
-               state: "default" 0.0;
-               rel1 {
-                  relative: 0.0 0.0;
-                  offset: 0 0;
-               }
-               rel2 {
-                  relative: 1.0 1.0;
-                  offset: -1 -1;
-               }
-            }
-            description {
-               state: "hidden" 0.0;
-               inherit: "default" 0.0;
-               visible: 0;
-            }
-         }
-
-         part {
-            name: "special-2";
-            type: GROUP;
-            source: "special-2";
-            clip_to: "special-2_clip";
-            description {
-               state: "default" 0.0;
-               min: 685 234;
-               max: 685 234;
-               rel1 {
-                  relative: 0.5  1.0;
-                  offset: -342 -264;
-               }
-               rel2 {
-                  relative: 0.5 1.0;
-                  offset: 342 -10;
-               }
-            }
-         }
-
-         part {
-            name: "fixed";
-            type: GROUP;
-            source: "fixed";
-            description {
-               state: "default" 0.0;
-               min: 685 234;
-               max: 685 234;
-               rel1 {
-                  relative: 0.5  1.0;
-                  offset: -342 -264;
-               }
-               rel2 {
-                  relative: 0.5 1.0;
-                  offset: 342 -10;
-               }
-            }
-         }
       }
+
+#define KEY_GROUP(_name)                                               \
+      parts {                                                          \
+         part {                                                        \
+            name: _name"_clip";                                        \
+            type: RECT;                                                \
+            description {                                              \
+               state: "default" 0.0;                                   \
+               rel1 {                                                  \
+                  relative: 0.0 0.0;                                   \
+                  offset: 0 0;                                         \
+               }                                                       \
+               rel2 {                                                  \
+                  relative: 1.0 1.0;                                   \
+                  offset: -1 -1;                                       \
+               }                                                       \
+            }                                                          \
+            description {                                              \
+               state: "hidden" 0.0;                                    \
+               inherit: "default" 0.0;                                 \
+               visible: 0;                                             \
+            }                                                          \
+         }                                                             \
+         part {                                                        \
+            name: _name;                                               \
+            type: GROUP;                                               \
+            source: _name;                                             \
+            clip_to: _name"_clip";                                     \
+            description {                                              \
+               state: "default" 0.0;                                   \
+               min: 685 234;                                           \
+               max: 685 234;                                           \
+               rel1 {                                                  \
+                  relative: 0.5  1.0;                                  \
+                  offset: -342 -264;                                   \
+               }                                                       \
+               rel2 {                                                  \
+                  relative: 0.5 1.0;                                   \
+                  offset: 342 -10;                                     \
+               }                                                       \
+            }                                                          \
+         }                                                             \
+      }                                                                \
+      programs {                                                       \
+         program {                                                     \
+            name: "show-"_name;                                        \
+            action: STATE_SET "default" 0.0;                           \
+            target: _name"_clip";                                      \
+         }                                                             \
+         program {                                                     \
+            name: "hide-"_name;                                        \
+            action: STATE_SET "hidden" 0.0;                            \
+            target: _name"_clip";                                      \
+         }                                                             \
+      }
+
+      KEY_GROUP("alphanum")
+      KEY_GROUP("special-1")
+      KEY_GROUP("special-2")
+      KEY_GROUP("fixed")
 
       programs {
          program {
-            name: "show-alphanum";
-            signal: "show-alphanum";
-            action: STATE_SET "default" 0.0;
-            target: "alphanum_clip";
-         }
-         program {
-            name: "hide-alphanum";
-            signal: "hide-alphanum";
-            action: STATE_SET "hidden" 0.0;
-            target: "alphanum_clip";
-         }
-
-         program {
-            name: "hide-special-1";
-            signal: "hide-special-1";
-            action: STATE_SET "hidden" 0.0;
-            target: "special-1_clip";
-         }
-         program {
-            name: "show-special-1";
-            signal: "show-special-1";
-            action: STATE_SET "default" 0.0;
-            target: "special-1_clip";
-         }
-
-         program {
-            name: "hide-special-2";
-            signal: "hide-special-2";
-            action: STATE_SET "hidden" 0.0;
-            target: "special-2_clip";
-         }
-         program {
-            name: "show-special-2";
-            signal: "show-special-2";
-            action: STATE_SET "default" 0.0;
-            target: "special-2_clip";
-         }
-
-         program {
-            name: "toggle-alphanum";
-            signal: "toggle-alphanum";
-            after: "hide-special-1";
-            after: "hide-special-2";
+            name: "alphanum_show";
+            signal: "show,alphanumeric";
             after: "show-alphanum";
+            after: "hide-special-1";
+            after: "hide-special-2";
+            after: "show-fixed";
          }
+
          program {
-            name: "toggle-special-1";
-            signal: "toggle-special-1";
+            name: "special-1_show";
+            signal: "show,special,1";
+            after: "show-special-1";
             after: "hide-alphanum";
             after: "hide-special-2";
-            after: "show-special-1";
+            after: "show-fixed";
          }
+
          program {
-            name: "toggle-special-2";
-            signal: "toggle-special-2";
+            name: "special-2_show";
+            signal: "show,special,2";
+            after: "show-special-2";
             after: "hide-alphanum";
             after: "hide-special-1";
-            after: "show-special-2";
+            after: "show-fixed";
          }
 
          program {
             name: ".?123_clicked";
-            signal: "mouse,clicked,1";
-            source: "alphanum:key-bg-.?123";
-            after: "toggle-special-1";
+            signal: "key_down";
+            source: "alphanum:.?123";
+            after: "special-1_show";
          }
          program {
             name: "special-1_ABC_clicked";
-            signal: "mouse,clicked,1";
-            source: "special-1:key-bg-ABC";
-            after: "toggle-alphanum";
+            signal: "key_down";
+            source: "special-1:ABC";
+            after: "alphanum_show";
          }
          program {
             name: "special-2_ABC_clicked";
-            signal: "mouse,clicked,1";
-            source: "special-2:key-bg-ABC";
-            after: "toggle-alphanum";
+            signal: "key_down";
+            source: "special-2:ABC";
+            after: "alphanum_show";
          }
          program {
             name: "#+=_clicked";
-            signal: "mouse,clicked,1";
-            source: "special-1:key-bg-#+=";
-            after: "toggle-special-2";
+            signal: "key_down";
+            source: "special-1:#+=";
+            after: "special-2_show";
          }
          program {
             name: ".?12_clicked";
-            signal: "mouse,clicked,1";
-            source: "special-2:key-bg-.?12";
-            after: "toggle-special-1";
+            signal: "key_down";
+            source: "special-2:.?12";
+            after: "special-1_show";
          }
-
-
          program {
             name: "init";
             signal: "show";
-            after: "toggle-alphanum";
+            after: "alphanum_show";
          }
       }
    }
 
    group {
-      name: "numeric";
+      name: "alphanum";
 
-      min: 168 224;
+#define MOUSE_DOWN_UP_PROGRAMS                                         \
+      script {                                                         \
+          public shift_pressed = 0;                                    \
+          public mouse_down = 0;                                       \
+          public pressed_key;                                          \
+                                                                       \
+          _set_key_pressed(_key[]) {                                   \
+             new _cur[10];                                             \
+             new _prg[30];                                             \
+             get_str(pressed_key, _cur, 10);                           \
+             if (strlen(_cur) > 0) {                                   \
+                snprintf(_prg, 30, "key-release-%s", _cur);            \
+                run_program(get_program_id(_prg));                     \
+             }                                                         \
+             set_str(pressed_key, _key);                               \
+             snprintf(_prg, 30, "key-press-%s", _key);                 \
+             run_program(get_program_id(_prg));                        \
+          }                                                            \
+          _set_key_released(_key[]) {                                  \
+             new _prg[30];                                             \
+             set_str(pressed_key, "");                                 \
+             snprintf(_prg, 30, "key-release-%s", _key);               \
+             run_program(get_program_id(_prg));                        \
+          }                                                            \
+      }                                                                \
+      programs {                                                       \
+         program {                                                     \
+            name: "mouse-down";                                        \
+            signal: "mouse,down,1";                                    \
+            source: "*";                                               \
+            script {                                                   \
+               set_int(mouse_down, 1);                                 \
+            }                                                          \
+         }                                                             \
+         program {                                                     \
+            name: "mouse-up";                                          \
+            signal: "mouse,up,1";                                      \
+            source: "*";                                               \
+            script {                                                   \
+               set_int(mouse_down, 0);                                 \
+            }                                                          \
+         }                                                             \
+      }
 
-      script { public shift_pressed = 0; }
+      MOUSE_DOWN_UP_PROGRAMS
       parts {
+#define INIT_HSPACE 0
+#define KEY_HSPACE 70
+#define KEY_HPOS(index)  KEY_HSPACE * index + INIT_HSPACE
+
+#define FIRST_ROW 0
 
 #define CLICK_AREA_W 68
-#define CLICK_AREA_H 58
+#define CLICK_AREA_H 70
 #define CLICK_AREA_DX 27
-#define CLICK_AREA_DY 27
+#define CLICK_AREA_DY 21
 #define SKEY_FULL(key_low, key_up, key_name, x, y, lbl_dx, lbl_dy)     \
          part {                                                        \
             name: "key-bg-"key_name;                                   \
@@ -524,31 +433,47 @@ collections {
          }                                                             \
          programs {                                                    \
             program {                                                  \
-               name: "key-down-"key_name;                              \
-               signal: "activated_key";                                \
+               name: "key-mouse-in-"key_name;                          \
+               signal: "mouse,in";                                     \
+               source: "key-bg-"key_name;                              \
+               script {                                                \
+                  if (get_int(mouse_down) == 0)                        \
+                     return;                                           \
+                  _set_key_pressed(key_name);                          \
+               }                                                       \
+            }                                                          \
+            program {                                                  \
+               name: "key-mouse-out-"key_name;                         \
+               signal: "mouse,out";                                    \
+               source: "key-bg-"key_name;                              \
+               script {                                                \
+                  if (get_int(mouse_down) == 0)                        \
+                     return;                                           \
+                  _set_key_released(key_name);                         \
+               }                                                       \
+            }                                                          \
+            program {                                                  \
+               name: "key-mouse-down-"key_name;                        \
+               signal: "mouse,down,1";                                 \
+               source: "key-bg-"key_name;                              \
+               script {                                                \
+                  _set_key_pressed(key_name);                          \
+               }                                                       \
+            }                                                          \
+            program {                                                  \
+               name: "key-mouse-up-"key_name;                          \
+               signal: "mouse,up,1";                                   \
                source: "key-bg-"key_name;                              \
                script {                                                \
                   if (get_int(shift_pressed) == 0)                     \
                      emit("key_down", key_low);                        \
                   else                                                 \
                      emit("key_down", key_up);                         \
+                  _set_key_released(key_name);                         \
                }                                                       \
             }                                                          \
             program {                                                  \
-               name: "key-mouse-in-"key_name;                          \
-               signal: "mouse,in";                                     \
-               source: "key-bg-"key_name;                              \
-               action: SIGNAL_EMIT "mouse_over_key" "key-bg-"key_name; \
-            }                                                          \
-            program {                                                  \
-               name: "key-mouse-out-"key_name;                         \
-               signal: "mouse,out";                                    \
-               source: "key-bg-"key_name;                              \
-               action: SIGNAL_EMIT "mouse_out_key" "key-bg-"key_name;  \
-            }                                                          \
-            program {                                                  \
                name: "key-press-"key_name;                             \
-               signal: "press_key";                                    \
                source: "key-bg-"key_name;                              \
                action: STATE_SET "down" 0.0;                           \
                target: "key-img-"key_name;                             \
@@ -558,7 +483,6 @@ collections {
             }                                                          \
             program {                                                  \
                name: "key-release-"key_name;                           \
-               signal: "release_key";                                  \
                source: "key-bg-"key_name;                              \
                action: STATE_SET "default" 0.0;                        \
                transition: LINEAR 0.2;                                 \
@@ -588,41 +512,6 @@ collections {
 #define KEY_FULL(low, up, x, y, lbl_dx, lbl_dy) SKEY_FULL(low, up, low, x, y, lbl_dx, lbl_dy)
 #define SKEY(name, text, x, y) SKEY_FULL(name, name, text, x, y, 0, 0)
 #define KEY(v, x, y) SKEY(v, v, x, y)
-
-        KEY("1",   0, 0)
-        KEY("2",  56, 0)
-        KEY("3", 112, 0)
-
-        KEY("4",   0, 56)
-        KEY("5",  56, 56)
-        KEY("6", 112, 56)
-
-        KEY("7",   0, 112)
-        KEY("8",  56, 112)
-        KEY("9", 112, 112)
-
-        KEY("0",   0, 168)
-        KEY(".",  56, 168)
-        KEY(",", 112, 168)
-      }
-   }
-
-   group {
-      name: "alphanum";
-
-      script { public shift_pressed = 0; }
-      parts {
-
-#define INIT_HSPACE 0
-#define KEY_HSPACE 70
-#define KEY_HPOS(index)  KEY_HSPACE * index + INIT_HSPACE
-
-#define FIRST_ROW 0
-
-#undef CLICK_AREA_H
-#undef CLICK_AREA_DY
-#define CLICK_AREA_H 70
-#define CLICK_AREA_DY 21
          KEY_FULL("q", "Q", KEY_HPOS(0), FIRST_ROW, -2, 0)
          KEY_FULL("w", "W", KEY_HPOS(1), FIRST_ROW, -5, 0)
          KEY_FULL("e", "E", KEY_HPOS(2), FIRST_ROW, 0, 0)
@@ -663,7 +552,7 @@ collections {
          KEY_FULL("n", "N", KEY_HPOS(5), THIRD_ROW, 2, 0)
          KEY_FULL("m", "M", KEY_HPOS(6), THIRD_ROW, 0, 0)
 
-#define FORTH_ROW 190
+#define FOURTH_ROW 190
 #define KEY_SPECIAL(val, x, y, w)                                      \
          part {                                                        \
             name: "key-bg-"val;                                        \
@@ -751,25 +640,36 @@ collections {
          programs {                                                    \
             program {                                                  \
                name: "key-down-"val;                                   \
-               signal: "activated_key";                                \
+               signal: "mouse,up,1";                                   \
                source: "key-bg-"val;                                   \
-               action: SIGNAL_EMIT "key_down" val;                     \
+               script {                                                \
+                  emit("key_down", val);                               \
+                  run_program(PROGRAM:"key-release-"val);              \
+               }                                                       \
             }                                                          \
             program {                                                  \
                name: "key-mouse-in-"val;                               \
                signal: "mouse,in";                                     \
                source: "key-bg-"val;                                   \
-               action: SIGNAL_EMIT "mouse_over_key" "key-bg-"val;      \
+               script {                                                \
+                  if (get_int(mouse_down) == 0)                        \
+                     return;                                           \
+                  run_program(PROGRAM:"key-press-"val);                \
+               }                                                       \
             }                                                          \
             program {                                                  \
                name: "key-mouse-out-"val;                              \
                signal: "mouse,out";                                    \
                source: "key-bg-"val;                                   \
-               action: SIGNAL_EMIT "mouse_out_key" "key-bg-"val;       \
+               script {                                                \
+                  if (get_int(mouse_down) == 0)                        \
+                     return;                                           \
+                  run_program(PROGRAM:"key-release-"val);              \
+               }                                                       \
             }                                                          \
             program {                                                  \
                name: "key-press-"val;                                  \
-               signal: "press_key";                                    \
+               signal: "mouse,down,1";                                 \
                source: "key-bg-"val;                                   \
                action: STATE_SET "down" 0.0;                           \
                target: "key-img-"val;                                  \
@@ -777,8 +677,6 @@ collections {
             }                                                          \
             program {                                                  \
                name: "key-release-"val;                                \
-               signal: "release_key";                                  \
-               source: "key-bg-"val;                                   \
                action: STATE_SET "default" 0.0;                        \
                transition: LINEAR 0.2;                                 \
                target: "key-img-"val;                                  \
@@ -786,7 +684,7 @@ collections {
             }                                                          \
          }
 
-         KEY_SPECIAL(".?123", 0, FORTH_ROW, 158)
+         KEY_SPECIAL(".?123", 0, FOURTH_ROW, 158)
 
 #undef INIT_HSPACE
 #define INIT_HSPACE 0
@@ -865,59 +763,78 @@ collections {
          }
          programs {
             program {
-               name: "key-down-shift-enter";
-               signal: "press_shift";
+               name: "key-press-shift";
+               signal: "mouse,down,1";
+               source: "key-bg-shift";
                action: STATE_SET "down" 0.0;
                transition: LINEAR 0.1;
                target: "key-img-shift";
                target: "key-lbl-shift";
             }
             program {
-               name: "key-down-shift-revert";
-               signal: "release_shift";
+               name: "key-release-shift";
                action: STATE_SET "default" 0.0;
                transition: LINEAR 0.1;
                target: "key-img-shift";
                target: "key-lbl-shift";
             }
             program {
-               name: "key-down-shift";
-               signal: "mouse,clicked,1";
+               name: "key-mouse-in-shift";
+               signal: "mouse,in";
                source: "key-bg-shift";
                script {
+                  if (get_int(mouse_down) == 0)
+                     return;
+                  run_program(PROGRAM:"key-press-shift");
+               }
+            }
+            program {
+               name: "key-mouse-out-shift";
+               signal: "mouse,out";
+               source: "key-bg-shift";
+               script {
+                  if (get_int(mouse_down) == 0)
+                     return;
+                  run_program(PROGRAM:"key-release-shift");
+               }
+            }
+            program {
+               name: "key-down-shift";
+               signal: "mouse,up,1";
+               source: "key-bg-shift";
+               script {
+                  emit("key_down", "shift");
                   if (get_int(shift_pressed) == 0) {
-                     run_program(PROGRAM:"key-down-shift-enter");
+                     run_program(PROGRAM:"key-press-shift");
                      set_int(shift_pressed, 1);
                   } else {
-                     run_program(PROGRAM:"key-down-shift-revert");
+                     run_program(PROGRAM:"key-release-shift");
                      set_int(shift_pressed, 0);
                   }
-                  emit("key_down", "shift");
                }
             }
          }
-
       }
    }
 
    group {
       name: "special-1";
 
-      script { public shift_pressed = 0; }
+      MOUSE_DOWN_UP_PROGRAMS
       parts {
 #undef KEY_HSPACE
 #define KEY_HSPACE 70
 #define INIT_HSPACE 0
-         KEY("0", KEY_HPOS(0), FIRST_ROW)
-         KEY("1", KEY_HPOS(1), FIRST_ROW)
-         KEY("2", KEY_HPOS(2), FIRST_ROW)
-         KEY("3", KEY_HPOS(3), FIRST_ROW)
-         KEY("4", KEY_HPOS(4), FIRST_ROW)
-         KEY("5", KEY_HPOS(5), FIRST_ROW)
-         KEY("6", KEY_HPOS(6), FIRST_ROW)
-         KEY("7", KEY_HPOS(7), FIRST_ROW)
-         KEY("8", KEY_HPOS(8), FIRST_ROW)
-         KEY("9", KEY_HPOS(9), FIRST_ROW)
+         KEY("1", KEY_HPOS(0), FIRST_ROW)
+         KEY("2", KEY_HPOS(1), FIRST_ROW)
+         KEY("3", KEY_HPOS(2), FIRST_ROW)
+         KEY("4", KEY_HPOS(3), FIRST_ROW)
+         KEY("5", KEY_HPOS(4), FIRST_ROW)
+         KEY("6", KEY_HPOS(5), FIRST_ROW)
+         KEY("7", KEY_HPOS(6), FIRST_ROW)
+         KEY("8", KEY_HPOS(7), FIRST_ROW)
+         KEY("9", KEY_HPOS(8), FIRST_ROW)
+         KEY("0", KEY_HPOS(9), FIRST_ROW)
 
 #undef INIT_HSPACE
 #define INIT_HSPACE 35
@@ -942,14 +859,14 @@ collections {
          SKEY("\"", "double_quote", KEY_HPOS(6), THIRD_ROW)
 
          KEY_SPECIAL("#+=", 0, THIRD_ROW, 80)
-         KEY_SPECIAL("ABC", 0, FORTH_ROW, 158)
+         KEY_SPECIAL("ABC", 0, FOURTH_ROW, 158)
       }
    }
 
    group {
       name: "special-2";
 
-      script { public shift_pressed = 0; }
+      MOUSE_DOWN_UP_PROGRAMS
       parts {
 #undef INIT_HSPACE
 #define INIT_HSPACE 0
@@ -972,12 +889,36 @@ collections {
          SKEY("}", "close_brace", KEY_HPOS(7), SECOND_ROW)
 
          KEY_SPECIAL(".?12", 0, THIRD_ROW, 80)
-         KEY_SPECIAL("ABC", 0, FORTH_ROW, 158)
+         KEY_SPECIAL("ABC", 0, FOURTH_ROW, 158)
       }
    }
 
    group {
       name: "fixed";
+
+      script {
+          public mouse_down = 0;
+      }
+
+      programs {
+            program {
+               name: "mouse-down";
+               signal: "mouse,down,1";
+               source: "*";
+               script {
+                  set_int(mouse_down, 1);
+               }
+            }
+            program {
+               name: "mouse-up";
+               signal: "mouse,up,1";
+               source: "*";
+               script {
+                  set_int(mouse_down, 0);
+                  emit("MOUSE", "UP");
+               }
+            }
+      }
 
       parts {
          part {
@@ -1056,25 +997,36 @@ collections {
          programs {
             program {
                name: "key-down-backspace";
-               signal: "activated_key";
+               signal: "mouse,up,1";
                source: "key-bg-backspace";
-               action: SIGNAL_EMIT "key_down" "backspace";
+               script {
+                  emit("key_down", "backspace");
+                  run_program(PROGRAM:"key-release-backspace");
+               }
             }
             program {
                name: "key-mouse-in-backspace";
                signal: "mouse,in";
                source: "key-bg-backspace";
-               action: SIGNAL_EMIT "mouse_over_key" "key-bg-backspace";
+               script {
+                  if (get_int(mouse_down) == 0)
+                     return;
+                  run_program(PROGRAM:"key-press-backspace");
+               }
             }
             program {
                name: "key-mouse-out-backspace";
                signal: "mouse,out";
                source: "key-bg-backspace";
-               action: SIGNAL_EMIT "mouse_out_key" "key-bg-backspace";
+               script {
+                  if (get_int(mouse_down) == 0)
+                     return;
+                  run_program(PROGRAM:"key-release-backspace");
+               }
             }
             program {
                name: "key-press-backspace";
-               signal: "press_key";
+               signal: "mouse,down,1";
                source: "key-bg-backspace";
                action: STATE_SET "down" 0.0;
                target: "key-img-backspace";
@@ -1082,8 +1034,6 @@ collections {
             }
             program {
                name: "key-release-backspace";
-               signal: "release_key";
-               source: "key-bg-backspace";
                action: STATE_SET "default" 0.0;
                transition: LINEAR 0.1;
                target: "key-img-backspace";
@@ -1101,11 +1051,11 @@ collections {
                max: 355 68;
                rel1 {
                   relative: 0.0 0.0;
-                  offset: (175 + 167) (FORTH_ROW + 27);
+                  offset: (175 + 167) (FOURTH_ROW + 27);
                }
                rel2 {
                   relative: 0.0 0.0;
-                  offset: (175 + 167) (FORTH_ROW + 27);
+                  offset: (175 + 167) (FOURTH_ROW + 27);
                }
                color: 0 0 0 0;
             }
@@ -1120,11 +1070,11 @@ collections {
                max: 335 54;
                rel1 {
                   relative: 0.0 0.0;
-                  offset: (175 + 167) (FORTH_ROW + 27);
+                  offset: (175 + 167) (FOURTH_ROW + 27);
                }
                rel2 {
                   relative: 0.0 0.0;
-                  offset: (175 + 167) (FORTH_ROW + 27);
+                  offset: (175 + 167) (FOURTH_ROW + 27);
                }
                image {
                   normal: "key-default.png";
@@ -1167,40 +1117,51 @@ collections {
          programs {
             program {
                name: "key-down-space";
-               signal: "activated_key";
+               signal: "mouse,up,1";
                source: "key-bg-space";
-               action: SIGNAL_EMIT "key_down" " ";
+               script {
+                  emit("key_down", " ");
+                  run_program(PROGRAM:"key-release-space");
+               }
             }
             program {
                name: "key-mouse-in-space";
                signal: "mouse,in";
                source: "key-bg-space";
-               action: SIGNAL_EMIT "mouse_over_key" "key-bg-space";
+               script {
+                  if (get_int(mouse_down) == 0)
+                     return;
+                  run_program(PROGRAM:"key-press-space");
+               }
             }
             program {
                name: "key-mouse-out-space";
                signal: "mouse,out";
                source: "key-bg-space";
-               action: SIGNAL_EMIT "mouse_out_key" "key-bg-space";
+               script {
+                  if (get_int(mouse_down) == 0)
+                     return;
+                  run_program(PROGRAM:"key-release-space");
+               }
             }
             program {
                name: "key-press-space";
-               signal: "press_key";
+               signal: "mouse,down,1";
                source: "key-bg-space";
                action: STATE_SET "down" 0.0;
                target: "key-img-space";
             }
             program {
                name: "key-release-space";
-               signal: "release_key";
-               source: "key-bg-space";
                action: STATE_SET "default" 0.0;
                transition: LINEAR 0.2;
                target: "key-img-space";
             }
          }
 
-         KEY_SPECIAL("enter", 525, FORTH_ROW, 158)
+         KEY_SPECIAL("enter", 525, FOURTH_ROW, 158)
+      }
+   }
       }
    }
 }

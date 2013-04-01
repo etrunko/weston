@@ -31,7 +31,10 @@
 #include <Ecore_Wayland.h>
 #include <Ecore_Evas.h>
 #include <Edje.h>
+
+#include <linux/input.h>
 #include <stdio.h>
+#include <string.h>
 
 #include "input-method-client-protocol.h"
 #include "text-client-protocol.h"
@@ -39,14 +42,57 @@
 struct vkbd_efl
 {
    Ecore_Evas *ee;
-   struct input_panel *ipanel;
-   struct input_method *imethod;
+
+   struct input_panel *ip;
+   struct input_method *im;
 };
 
 static void
-_vkbd_on_delete(Ecore_Evas *ee EINA_UNUSED)
+_cb_vkbd_delete_request(Ecore_Evas *ee EINA_UNUSED)
 {
    ecore_main_loop_quit();
+}
+
+static void
+_cb_vkbd_on_key_down(void *data, Evas_Object *obj, const char *emission EINA_UNUSED, const char *source)
+{
+    struct vkbd_efl *vkbd = data;
+    char *src;
+    const char *group, *key;
+
+    src = strdup(source);
+    printf("SOURCE = %s\n", source);
+
+    group = strtok(src, ":");
+    key = strtok(NULL, ":");
+    if (key == NULL)
+        key = ":";
+
+    if (strcmp(key, "ABC")   == 0 ||
+        strcmp(key, ".?123") == 0 ||
+        strcmp(key, ".?12")  == 0 ||
+        strcmp(key, "#+=")   == 0)
+      {
+         printf("ignoring special key\n");
+         goto end;
+      }
+    else if (strcmp(key, "backspace") == 0)
+      {
+      }
+    else if (strcmp(key, " ") == 0)
+      {
+      }
+    else if (strcmp(key, "shift") == 0)
+      {
+      }
+    else if (strcmp(key, "enter") == 0)
+      {
+      }
+
+    printf("KEY = '%s'\n", key);
+
+end:
+    free(src);
 }
 
 static Eina_Bool
@@ -85,7 +131,8 @@ _vkbd_ui_setup(struct vkbd_efl *vkbd)
    evas_object_move(edje_obj, 0, 0);
    evas_object_show(edje_obj);
 
-   ecore_evas_callback_delete_request_set(vkbd->ee, _vkbd_on_delete);
+   edje_object_signal_callback_add(edje_obj, "key_down", "*", _cb_vkbd_on_key_down, vkbd);
+   ecore_evas_callback_delete_request_set(vkbd->ee, _cb_vkbd_delete_request);
 
    ecore_evas_show(vkbd->ee);
 
@@ -108,14 +155,15 @@ _vkbd_setup(struct vkbd_efl *vkbd)
    wl_list_for_each(global, globals, link)
      {
         if (strcmp(global->interface, "input_panel") == 0)
-           vkbd->ipanel = wl_registry_bind(registry, global->id, &input_panel_interface, 1);
+           vkbd->ip = wl_registry_bind(registry, global->id, &input_panel_interface, 1);
         else if (strcmp(global->interface, "input_method") == 0)
-           vkbd->imethod = wl_registry_bind(registry, global->id, &input_method_interface, 1);
+           vkbd->im = wl_registry_bind(registry, global->id, &input_method_interface, 1);
      }
 
+   /* Set input panel surface */
    win = ecore_evas_wayland_window_get(vkbd->ee);
    surface = ecore_wl_window_surface_create(win);
-   ips = input_panel_get_input_panel_surface(vkbd->ipanel, surface);
+   ips = input_panel_get_input_panel_surface(vkbd->ip, surface);
    input_panel_surface_set_toplevel(ips, INPUT_PANEL_SURFACE_POSITION_CENTER_BOTTOM);
 }
 
