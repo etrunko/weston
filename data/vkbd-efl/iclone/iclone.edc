@@ -362,13 +362,14 @@ collections {
 
       min: 168 224;
 
+      script { public shift_pressed = 0; }
       parts {
 
 #define CLICK_AREA_W 68
 #define CLICK_AREA_H 58
 #define CLICK_AREA_DX 27
 #define CLICK_AREA_DY 27
-#define SKEY_FULL(key_text, key_name, x, y, lbl_dx, lbl_dy)            \
+#define SKEY_FULL(key_low, key_up, key_name, x, y, lbl_dx, lbl_dy)     \
          part {                                                        \
             name: "key-bg-"key_name;                                   \
             type: RECT;                                                \
@@ -433,9 +434,9 @@ collections {
                  offset: -1 48;                                        \
               }                                                        \
               text {                                                   \
-                 font: "Sans";                                          \
+                 font: "Sans";                                         \
                  size: 32;                                             \
-                 text: key_text;                                       \
+                 text: key_low;                                        \
               }                                                        \
             }                                                          \
             description {                                              \
@@ -489,9 +490,9 @@ collections {
                   offset: -1 48;                                       \
                }                                                       \
                text {                                                  \
-                  font: "Sans";                                         \
+                  font: "Sans";                                        \
                   size: 48;                                            \
-                  text: key_text;                                      \
+                  text: key_low;                                       \
                }                                                       \
                visible: 0;                                             \
             }                                                          \
@@ -507,7 +508,12 @@ collections {
                name: "key-down-"key_name;                              \
                signal: "activated_key";                                \
                source: "key-bg-"key_name;                              \
-               action: SIGNAL_EMIT "key_down" key_text;                \
+               script {                                                \
+                  if (get_int(shift_pressed) == 0)                     \
+                     emit("key_down", key_low);                        \
+                  else                                                 \
+                     emit("key_down", key_up);                         \
+               }                                                       \
             }                                                          \
             program {                                                  \
                name: "key-mouse-in-"key_name;                          \
@@ -542,10 +548,26 @@ collections {
                target: "key-img-zoom-"key_name;                        \
                target: "key-lbl-zoom-"key_name;                        \
             }                                                          \
+            program {                                                  \
+               name: "shift-pressed-"key_name;                         \
+               signal: "key_down";                                     \
+               source: "shift";                                        \
+               script {                                                \
+                  new _id = get_part_id("key-lbl-"key_name);           \
+                  new _id_zoom = get_part_id("key-lbl-zoom-"key_name); \
+                  if (get_int(shift_pressed) == 0) {                   \
+                     set_text(_id, key_low);                           \
+                     set_text(_id_zoom, key_low);                      \
+                  } else {                                             \
+                     set_text(_id, key_up);                            \
+                     set_text(_id_zoom, key_up);                       \
+                  }                                                    \
+               }                                                       \
+            }                                                          \
          }
 
-#define KEY_FULL(v, x, y, lbl_dx, lbl_dy) SKEY_FULL(v, v, x, y, lbl_dx, lbl_dy)
-#define SKEY(name, text, x, y) SKEY_FULL(name, text, x, y, 0, 0)
+#define KEY_FULL(low, up, x, y, lbl_dx, lbl_dy) SKEY_FULL(low, up, low, x, y, lbl_dx, lbl_dy)
+#define SKEY(name, text, x, y) SKEY_FULL(name, name, text, x, y, 0, 0)
 #define KEY(v, x, y) SKEY(v, v, x, y)
 
         KEY("1",   0, 0)
@@ -569,6 +591,7 @@ collections {
    group {
       name: "alphanum";
 
+      script { public shift_pressed = 0; }
       parts {
 
 #define INIT_HSPACE 0
@@ -581,16 +604,16 @@ collections {
 #undef CLICK_AREA_DY
 #define CLICK_AREA_H 70
 #define CLICK_AREA_DY 21
-         KEY_FULL("Q", KEY_HPOS(0), FIRST_ROW, -2, 0)
-         KEY_FULL("W", KEY_HPOS(1), FIRST_ROW, -5, 0)
-         KEY_FULL("E", KEY_HPOS(2), FIRST_ROW, 0, 0)
-         KEY_FULL("R", KEY_HPOS(3), FIRST_ROW, 0, 0)
-         KEY_FULL("T", KEY_HPOS(4), FIRST_ROW, -4, 0)
-         KEY_FULL("Y", KEY_HPOS(5), FIRST_ROW, -6, 0)
-         KEY_FULL("U", KEY_HPOS(6), FIRST_ROW, 0, 0)
-         KEY_FULL("I", KEY_HPOS(7), FIRST_ROW, 2, 0)
-         KEY_FULL("O", KEY_HPOS(8), FIRST_ROW, -2, 0)
-         KEY_FULL("P", KEY_HPOS(9), FIRST_ROW, 0, 0)
+         KEY_FULL("q", "Q", KEY_HPOS(0), FIRST_ROW, -2, 0)
+         KEY_FULL("w", "W", KEY_HPOS(1), FIRST_ROW, -5, 0)
+         KEY_FULL("e", "E", KEY_HPOS(2), FIRST_ROW, 0, 0)
+         KEY_FULL("r", "R", KEY_HPOS(3), FIRST_ROW, 0, 0)
+         KEY_FULL("t", "T", KEY_HPOS(4), FIRST_ROW, -4, 0)
+         KEY_FULL("y", "Y", KEY_HPOS(5), FIRST_ROW, -6, 0)
+         KEY_FULL("u", "U", KEY_HPOS(6), FIRST_ROW, 0, 0)
+         KEY_FULL("i", "I", KEY_HPOS(7), FIRST_ROW, 2, 0)
+         KEY_FULL("o", "O", KEY_HPOS(8), FIRST_ROW, -2, 0)
+         KEY_FULL("p", "P", KEY_HPOS(9), FIRST_ROW, 0, 0)
 
 #undef INIT_HSPACE
 #define INIT_HSPACE 35
@@ -600,26 +623,26 @@ collections {
 #undef CLICK_AREA_DY
 #define CLICK_AREA_H 58
 #define CLICK_AREA_DY 27
-         KEY_FULL("A", KEY_HPOS(0), SECOND_ROW, -8, 0)
-         KEY_FULL("S", KEY_HPOS(1), SECOND_ROW, 0, 0)
-         KEY_FULL("D", KEY_HPOS(2), SECOND_ROW, 0, 0)
-         KEY_FULL("F", KEY_HPOS(3), SECOND_ROW, 0, 0)
-         KEY_FULL("G", KEY_HPOS(4), SECOND_ROW, -2, 2)
-         KEY_FULL("H", KEY_HPOS(5), SECOND_ROW, 2, 0)
-         KEY_FULL("J", KEY_HPOS(6), SECOND_ROW, -6, 0)
-         KEY_FULL("K", KEY_HPOS(7), SECOND_ROW, 0, 0)
-         KEY_FULL("L", KEY_HPOS(8), SECOND_ROW, 0, 0)
+         KEY_FULL("a", "A", KEY_HPOS(0), SECOND_ROW, -8, 0)
+         KEY_FULL("s", "S", KEY_HPOS(1), SECOND_ROW, 0, 0)
+         KEY_FULL("d", "D", KEY_HPOS(2), SECOND_ROW, 0, 0)
+         KEY_FULL("f", "F", KEY_HPOS(3), SECOND_ROW, 0, 0)
+         KEY_FULL("g", "G", KEY_HPOS(4), SECOND_ROW, -2, 2)
+         KEY_FULL("h", "H", KEY_HPOS(5), SECOND_ROW, 2, 0)
+         KEY_FULL("j", "J", KEY_HPOS(6), SECOND_ROW, -6, 0)
+         KEY_FULL("k", "K", KEY_HPOS(7), SECOND_ROW, 0, 0)
+         KEY_FULL("l", "L", KEY_HPOS(8), SECOND_ROW, 0, 0)
 
 #undef INIT_HSPACE
 #define INIT_HSPACE 105
 #define THIRD_ROW 120
-         KEY_FULL("Z", KEY_HPOS(0), THIRD_ROW, 0, 0)
-         KEY_FULL("X", KEY_HPOS(1), THIRD_ROW, -4, 0)
-         KEY_FULL("C", KEY_HPOS(2), THIRD_ROW, -4, 0)
-         KEY_FULL("V", KEY_HPOS(3), THIRD_ROW, -6, 0)
-         KEY_FULL("B", KEY_HPOS(4), THIRD_ROW, 2, 0)
-         KEY_FULL("N", KEY_HPOS(5), THIRD_ROW, 2, 0)
-         KEY_FULL("M", KEY_HPOS(6), THIRD_ROW, 0, 0)
+         KEY_FULL("z", "Z", KEY_HPOS(0), THIRD_ROW, 0, 0)
+         KEY_FULL("x", "X", KEY_HPOS(1), THIRD_ROW, -4, 0)
+         KEY_FULL("c", "C", KEY_HPOS(2), THIRD_ROW, -4, 0)
+         KEY_FULL("v", "V", KEY_HPOS(3), THIRD_ROW, -6, 0)
+         KEY_FULL("b", "B", KEY_HPOS(4), THIRD_ROW, 2, 0)
+         KEY_FULL("n", "N", KEY_HPOS(5), THIRD_ROW, 2, 0)
+         KEY_FULL("m", "M", KEY_HPOS(6), THIRD_ROW, 0, 0)
 
 #define FORTH_ROW 190
 #define KEY_SPACE                                                       \
@@ -936,12 +959,6 @@ collections {
          }
          programs {
             program {
-               name: "key-down-shift";
-               signal: "mouse,clicked,1";
-               source: "key-bg-shift";
-               action: SIGNAL_EMIT "key_down" "shift";
-            }
-            program {
                name: "key-down-shift-enter";
                signal: "press_shift";
                action: STATE_SET "down" 0.0;
@@ -956,6 +973,21 @@ collections {
                transition: LINEAR 0.1;
                target: "key-img-shift";
                target: "key-lbl-shift";
+            }
+            program {
+               name: "key-down-shift";
+               signal: "mouse,clicked,1";
+               source: "key-bg-shift";
+               script {
+                  if (get_int(shift_pressed) == 0) {
+                     run_program(PROGRAM:"key-down-shift-enter");
+                     set_int(shift_pressed, 1);
+                  } else {
+                     run_program(PROGRAM:"key-down-shift-revert");
+                     set_int(shift_pressed, 0);
+                  }
+                  emit("key_down", "shift");
+               }
             }
          }
 
@@ -1078,6 +1110,7 @@ collections {
    group {
       name: "special-1";
 
+      script { public shift_pressed = 0; }
       parts {
 #undef KEY_HSPACE
 #define KEY_HSPACE 70
@@ -1126,6 +1159,8 @@ collections {
 
    group {
       name: "special-2";
+
+      script { public shift_pressed = 0; }
       parts {
 #undef INIT_HSPACE
 #define INIT_HSPACE 0
