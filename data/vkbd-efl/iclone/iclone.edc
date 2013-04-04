@@ -253,6 +253,25 @@ collections {
                }
             }
          }
+
+         part {
+            name: "fixed";
+            type: GROUP;
+            source: "fixed";
+            description {
+               state: "default" 0.0;
+               min: 685 234;
+               max: 685 234;
+               rel1 {
+                  relative: 0.5  1.0;
+                  offset: -342 -264;
+               }
+               rel2 {
+                  relative: 0.5 1.0;
+                  offset: 342 -10;
+               }
+            }
+         }
       }
 
       programs {
@@ -645,116 +664,6 @@ collections {
          KEY_FULL("m", "M", KEY_HPOS(6), THIRD_ROW, 0, 0)
 
 #define FORTH_ROW 190
-#define KEY_SPACE                                                       \
-         part {                                                         \
-            name: "key-bg-space";                                       \
-            type: RECT;                                                 \
-            pointer_mode: NOGRAB;                                       \
-            description {                                               \
-               state: "default" 0.0;                                    \
-               min: 355 68;                                             \
-               max: 355 68;                                             \
-               rel1 {                                                   \
-                  relative: 0.0 0.0;                                    \
-                  offset: (175 + 167) (FORTH_ROW + 27);                 \
-               }                                                        \
-               rel2 {                                                   \
-                  relative: 0.0 0.0;                                    \
-                  offset: (175 + 167) (FORTH_ROW + 27);                 \
-               }                                                        \
-               color: 0 0 0 0;                                          \
-            }                                                           \
-         }                                                              \
-         part {                                                         \
-            name: "key-img-space";                                      \
-            type: IMAGE;                                                \
-            mouse_events: 0;                                            \
-            description {                                               \
-               state: "default" 0.0;                                    \
-               min: 335 54;                                             \
-               max: 335 54;                                             \
-               rel1 {                                                   \
-                  relative: 0.0 0.0;                                    \
-                  offset: (175 + 167) (FORTH_ROW + 27);                 \
-               }                                                        \
-               rel2 {                                                   \
-                  relative: 0.0 0.0;                                    \
-                  offset: (175 + 167) (FORTH_ROW + 27);                 \
-               }                                                        \
-               image {                                                  \
-                  normal: "key-default.png";                            \
-                  border: 9 9 9 9;                                      \
-               }                                                        \
-            }                                                           \
-            description {                                               \
-               state: "down" 0.0;                                       \
-               inherit: "default" 0.0;                                  \
-               color: 160 160 160 255;                                  \
-            }                                                           \
-         }                                                              \
-         part {                                                         \
-           name: "key-lbl-space";                                       \
-           type: TEXT;                                                  \
-           mouse_events: 0;                                             \
-           effect: OUTLINE;                                             \
-           description {                                                \
-              state: "default" 0.0;                                     \
-              color: 0 0 0 255;                                         \
-              color2: 100 100 100 255;                                  \
-              color3: 100 100 100 255;                                  \
-              rel1 {                                                    \
-                 to: "key-img-space";                                   \
-                 relative: 0.0 0.0;                                     \
-                 offset: 8 4;                                           \
-              }                                                         \
-              rel2 {                                                    \
-                 to: "key-img-space";                                   \
-                 relative: 1.0 1.0;                                     \
-                 offset: -1 -1;                                         \
-              }                                                         \
-              text {                                                    \
-                 font: "Sans";                                           \
-                 size: 28;                                              \
-                 text: "space";                                         \
-              }                                                         \
-           }                                                            \
-         }                                                              \
-         programs {                                                     \
-            program {                                                   \
-               name: "key-down-space";                                  \
-               signal: "activated_key";                                 \
-               source: "key-bg-space";                                  \
-               action: SIGNAL_EMIT "key_down" " ";                      \
-            }                                                           \
-            program {                                                   \
-               name: "key-mouse-in-space";                              \
-               signal: "mouse,in";                                      \
-               source: "key-bg-space";                                  \
-               action: SIGNAL_EMIT "mouse_over_key" "key-bg-space";     \
-            }                                                           \
-            program {                                                   \
-               name: "key-mouse-out-space";                             \
-               signal: "mouse,out";                                     \
-               source: "key-bg-space";                                  \
-               action: SIGNAL_EMIT "mouse_out_key" "key-bg-space";      \
-            }                                                           \
-            program {                                                   \
-               name: "key-press-space";                                 \
-               signal: "press_key";                                     \
-               source: "key-bg-space";                                  \
-               action: STATE_SET "down" 0.0;                            \
-               target: "key-img-space";                                 \
-            }                                                           \
-            program {                                                   \
-               name: "key-release-space";                               \
-               signal: "release_key";                                   \
-               source: "key-bg-space";                                  \
-               action: STATE_SET "default" 0.0;                         \
-               transition: LINEAR 0.2;                                  \
-               target: "key-img-space";                                 \
-            }                                                           \
-         }
-
 #define KEY_SPECIAL(val, x, y, w)                                      \
          part {                                                        \
             name: "key-bg-"val;                                        \
@@ -826,7 +735,7 @@ collections {
                  offset: -1 -1;                                        \
               }                                                        \
               text {                                                   \
-                 font: "Sans";                                          \
+                 font: "Sans";                                         \
                  size: 24;                                             \
                  text: val;                                            \
               }                                                        \
@@ -878,9 +787,6 @@ collections {
          }
 
          KEY_SPECIAL(".?123", 0, FORTH_ROW, 158)
-         KEY_SPACE
-         KEY_SPECIAL("enter", 525, FORTH_ROW, 158)
-
 
 #undef INIT_HSPACE
 #define INIT_HSPACE 0
@@ -991,119 +897,6 @@ collections {
             }
          }
 
-#define KEY_BACKSPACE                                                   \
-         part {                                                         \
-            name: "key-bg-backspace";                                   \
-            type: RECT;                                                 \
-            pointer_mode: NOGRAB;                                       \
-            description {                                               \
-               state: "default" 0.0;                                    \
-               min: 87 54;                                              \
-               max: 87 54;                                              \
-               rel1 {                                                   \
-                  relative: 0.0 0.0;                                    \
-                  offset: (596 + 87/2) (THIRD_ROW + 27);                \
-               }                                                        \
-               rel2 {                                                   \
-                  relative: 0.0 0.0;                                    \
-                  offset: (596 + 87/2) (THIRD_ROW + 27);                \
-               }                                                        \
-               color: 0 0 0 0;                                          \
-            }                                                           \
-         }                                                              \
-         part {                                                         \
-            name: "key-img-backspace";                                  \
-            type: IMAGE;                                                \
-            mouse_events: 0;                                            \
-            description {                                               \
-               state: "default" 0.0;                                    \
-               min: 87 54;                                              \
-               max: 87 54;                                              \
-               rel1 {                                                   \
-                  relative: 0.0 0.0;                                    \
-                  offset: (596 + 87/2) (THIRD_ROW + 27);                \
-               }                                                        \
-               rel2 {                                                   \
-                  relative: 0.0 0.0;                                    \
-                  offset: (596 + 87/2) (THIRD_ROW + 27);                \
-               }                                                        \
-               image {                                                  \
-                  normal: "key-special.png";                            \
-                  border: 9 9 9 9;                                      \
-               }                                                        \
-            }                                                           \
-            description {                                               \
-               state: "down" 0.0;                                       \
-               inherit: "default" 0.0;                                  \
-               image {                                                  \
-                  normal: "key-special-selected.png";                   \
-                  border: 9 9 9 9;                                      \
-               }                                                        \
-            }                                                           \
-         }                                                              \
-         part {                                                         \
-           name: "key-lbl-backspace";                                   \
-           type: IMAGE;                                                 \
-           mouse_events: 0;                                             \
-           description {                                                \
-              state: "default" 0.0;                                     \
-              max: 40 32;                                               \
-              min: 40 32;                                               \
-              rel1 {                                                    \
-                 to: "key-bg-backspace";                                \
-                 relative: 0.5 0.5;                                     \
-              }                                                         \
-              rel2 {                                                    \
-                 to: "key-bg-backspace";                                \
-                 relative: 0.5 0.5;                                     \
-              }                                                         \
-              image.normal: "backspace.png";                            \
-            }                                                           \
-            description {                                               \
-               state: "down" 0.0;                                       \
-               inherit: "default" 0.0;                                  \
-               image.normal: "backspace-selected.png";                  \
-            }                                                           \
-         }                                                              \
-         programs {                                                     \
-            program {                                                   \
-               name: "key-down-backspace";                              \
-               signal: "activated_key";                                 \
-               source: "key-bg-backspace";                              \
-               action: SIGNAL_EMIT "key_down" "backspace";              \
-            }                                                           \
-            program {                                                   \
-               name: "key-mouse-in-backspace";                          \
-               signal: "mouse,in";                                      \
-               source: "key-bg-backspace";                              \
-               action: SIGNAL_EMIT "mouse_over_key" "key-bg-backspace"; \
-            }                                                           \
-            program {                                                   \
-               name: "key-mouse-out-backspace";                         \
-               signal: "mouse,out";                                     \
-               source: "key-bg-backspace";                              \
-               action: SIGNAL_EMIT "mouse_out_key" "key-bg-backspace";  \
-            }                                                           \
-            program {                                                   \
-               name: "key-press-backspace";                             \
-               signal: "press_key";                                     \
-               source: "key-bg-backspace";                              \
-               action: STATE_SET "down" 0.0;                            \
-               target: "key-img-backspace";                             \
-               target: "key-lbl-backspace";                             \
-            }                                                           \
-            program {                                                   \
-               name: "key-release-backspace";                           \
-               signal: "release_key";                                   \
-               source: "key-bg-backspace";                              \
-               action: STATE_SET "default" 0.0;                         \
-               transition: LINEAR 0.1;                                  \
-               target: "key-img-backspace";                             \
-               target: "key-lbl-backspace";                             \
-            }                                                           \
-         }
-
-         KEY_BACKSPACE
       }
    }
 
@@ -1149,11 +942,7 @@ collections {
          SKEY("\"", "double_quote", KEY_HPOS(6), THIRD_ROW)
 
          KEY_SPECIAL("#+=", 0, THIRD_ROW, 80)
-         KEY_BACKSPACE
-
          KEY_SPECIAL("ABC", 0, FORTH_ROW, 158)
-         KEY_SPACE
-         KEY_SPECIAL("enter", 525, FORTH_ROW, 158)
       }
    }
 
@@ -1183,10 +972,234 @@ collections {
          SKEY("}", "close_brace", KEY_HPOS(7), SECOND_ROW)
 
          KEY_SPECIAL(".?12", 0, THIRD_ROW, 80)
-         KEY_BACKSPACE
-
          KEY_SPECIAL("ABC", 0, FORTH_ROW, 158)
-         KEY_SPACE
+      }
+   }
+
+   group {
+      name: "fixed";
+
+      parts {
+         part {
+            name: "key-bg-backspace";
+            type: RECT;
+            pointer_mode: NOGRAB;
+            description {
+               state: "default" 0.0;
+               min: 87 54;
+               max: 87 54;
+               rel1 {
+                  relative: 0.0 0.0;
+                  offset: (596 + 87/2) (THIRD_ROW + 27);
+               }
+               rel2 {
+                  relative: 0.0 0.0;
+                  offset: (596 + 87/2) (THIRD_ROW + 27);
+               }
+               color: 0 0 0 0;
+            }
+         }
+         part {
+            name: "key-img-backspace";
+            type: IMAGE;
+            mouse_events: 0;
+            description {
+               state: "default" 0.0;
+               min: 87 54;
+               max: 87 54;
+               rel1 {
+                  relative: 0.0 0.0;
+                  offset: (596 + 87/2) (THIRD_ROW + 27);
+               }
+               rel2 {
+                  relative: 0.0 0.0;
+                  offset: (596 + 87/2) (THIRD_ROW + 27);
+               }
+               image {
+                  normal: "key-special.png";
+                  border: 9 9 9 9;
+               }
+            }
+            description {
+               state: "down" 0.0;
+               inherit: "default" 0.0;
+               image {
+                  normal: "key-special-selected.png";
+                  border: 9 9 9 9;
+               }
+            }
+         }
+         part {
+           name: "key-lbl-backspace";
+           type: IMAGE;
+           mouse_events: 0;
+           description {
+              state: "default" 0.0;
+              max: 40 32;
+              min: 40 32;
+              rel1 {
+                 to: "key-bg-backspace";
+                 relative: 0.5 0.5;
+              }
+              rel2 {
+                 to: "key-bg-backspace";
+                 relative: 0.5 0.5;
+              }
+              image.normal: "backspace.png";
+            }
+            description {
+               state: "down" 0.0;
+               inherit: "default" 0.0;
+               image.normal: "backspace-selected.png";
+            }
+         }
+         programs {
+            program {
+               name: "key-down-backspace";
+               signal: "activated_key";
+               source: "key-bg-backspace";
+               action: SIGNAL_EMIT "key_down" "backspace";
+            }
+            program {
+               name: "key-mouse-in-backspace";
+               signal: "mouse,in";
+               source: "key-bg-backspace";
+               action: SIGNAL_EMIT "mouse_over_key" "key-bg-backspace";
+            }
+            program {
+               name: "key-mouse-out-backspace";
+               signal: "mouse,out";
+               source: "key-bg-backspace";
+               action: SIGNAL_EMIT "mouse_out_key" "key-bg-backspace";
+            }
+            program {
+               name: "key-press-backspace";
+               signal: "press_key";
+               source: "key-bg-backspace";
+               action: STATE_SET "down" 0.0;
+               target: "key-img-backspace";
+               target: "key-lbl-backspace";
+            }
+            program {
+               name: "key-release-backspace";
+               signal: "release_key";
+               source: "key-bg-backspace";
+               action: STATE_SET "default" 0.0;
+               transition: LINEAR 0.1;
+               target: "key-img-backspace";
+               target: "key-lbl-backspace";
+            }
+         }
+
+         part {
+            name: "key-bg-space";
+            type: RECT;
+            pointer_mode: NOGRAB;
+            description {
+               state: "default" 0.0;
+               min: 355 68;
+               max: 355 68;
+               rel1 {
+                  relative: 0.0 0.0;
+                  offset: (175 + 167) (FORTH_ROW + 27);
+               }
+               rel2 {
+                  relative: 0.0 0.0;
+                  offset: (175 + 167) (FORTH_ROW + 27);
+               }
+               color: 0 0 0 0;
+            }
+         }
+         part {
+            name: "key-img-space";
+            type: IMAGE;
+            mouse_events: 0;
+            description {
+               state: "default" 0.0;
+               min: 335 54;
+               max: 335 54;
+               rel1 {
+                  relative: 0.0 0.0;
+                  offset: (175 + 167) (FORTH_ROW + 27);
+               }
+               rel2 {
+                  relative: 0.0 0.0;
+                  offset: (175 + 167) (FORTH_ROW + 27);
+               }
+               image {
+                  normal: "key-default.png";
+                  border: 9 9 9 9;
+               }
+            }
+            description {
+               state: "down" 0.0;
+               inherit: "default" 0.0;
+               color: 160 160 160 255;
+            }
+         }
+         part {
+           name: "key-lbl-space";
+           type: TEXT;
+           mouse_events: 0;
+           effect: OUTLINE;
+           description {
+              state: "default" 0.0;
+              color: 0 0 0 255;
+              color2: 100 100 100 255;
+              color3: 100 100 100 255;
+              rel1 {
+                 to: "key-img-space";
+                 relative: 0.0 0.0;
+                 offset: 8 4;
+              }
+              rel2 {
+                 to: "key-img-space";
+                 relative: 1.0 1.0;
+                 offset: -1 -1;
+              }
+              text {
+                 font: "Sans";
+                 size: 28;
+                 text: "space";
+              }
+           }
+         }
+         programs {
+            program {
+               name: "key-down-space";
+               signal: "activated_key";
+               source: "key-bg-space";
+               action: SIGNAL_EMIT "key_down" " ";
+            }
+            program {
+               name: "key-mouse-in-space";
+               signal: "mouse,in";
+               source: "key-bg-space";
+               action: SIGNAL_EMIT "mouse_over_key" "key-bg-space";
+            }
+            program {
+               name: "key-mouse-out-space";
+               signal: "mouse,out";
+               source: "key-bg-space";
+               action: SIGNAL_EMIT "mouse_out_key" "key-bg-space";
+            }
+            program {
+               name: "key-press-space";
+               signal: "press_key";
+               source: "key-bg-space";
+               action: STATE_SET "down" 0.0;
+               target: "key-img-space";
+            }
+            program {
+               name: "key-release-space";
+               signal: "release_key";
+               source: "key-bg-space";
+               action: STATE_SET "default" 0.0;
+               transition: LINEAR 0.2;
+               target: "key-img-space";
+            }
+         }
+
          KEY_SPECIAL("enter", 525, FORTH_ROW, 158)
       }
    }
