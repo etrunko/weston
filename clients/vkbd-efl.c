@@ -34,6 +34,7 @@
 
 #include <linux/input.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 
 #include "input-method-client-protocol.h"
@@ -42,6 +43,7 @@
 struct vkbd_efl
 {
    Ecore_Evas *ee;
+   const char *ee_engine;
 
    struct input_panel *ip;
    struct input_method *im;
@@ -167,21 +169,61 @@ _vkbd_setup(struct vkbd_efl *vkbd)
    input_panel_surface_set_toplevel(ips, INPUT_PANEL_SURFACE_POSITION_CENTER_BOTTOM);
 }
 
+static Eina_Bool
+_vkbd_check_evas_engine(struct vkbd_efl *vkbd)
+{
+   Eina_Bool ret = EINA_FALSE;
+   char *env = getenv("ECORE_EVAS_ENGINE");
+
+   if (!env)
+     {
+        if (ecore_evas_engine_type_supported_get(ECORE_EVAS_ENGINE_WAYLAND_SHM))
+           env = "wayland_shm";
+        else if (ecore_evas_engine_type_supported_get(ECORE_EVAS_ENGINE_WAYLAND_EGL))
+           env = "wayland_egl";
+        else
+          {
+             printf("ERROR: Ecore_Evas does must be compiled with support for Wayland engines\n");
+             goto err;
+          }
+     }
+   else if (strcmp(env, "wayland_shm") != 0 && strcmp(env, "wayland_egl") != 0)
+     {
+        printf("ERROR: ECORE_EVAS_ENGINE must be set to either 'wayland_shm' or 'wayland_egl'\n");
+        goto err;
+     }
+
+   vkbd->ee_engine = env;
+   ret = EINA_TRUE;
+
+err:
+   return ret;
+}
+
 int
 main(int argc EINA_UNUSED, char **argv EINA_UNUSED)
 {
    struct vkbd_efl vkbd = {0};
    int ret = EXIT_FAILURE;
 
-   if (!ecore_evas_init()) return ret;
-   if (!edje_init()) goto ee_err;
+   if (!ecore_evas_init())
+       return ret;
 
-   vkbd.ee = ecore_evas_new(NULL, 0, 0, 1, 1, "frame=0");
+   if (!edje_init())
+       goto ee_err;
 
-   if (!vkbd.ee) goto edj_err;
+   if (!_vkbd_check_evas_engine(&vkbd))
+      goto edj_err;
+
+   printf("SELECTED ENGINE = %s\n", vkbd.ee_engine);
+   vkbd.ee = ecore_evas_new(vkbd.ee_engine, 0, 0, 1, 1, "frame=0");
+
+   if (!vkbd.ee)
+       goto edj_err;
 
    _vkbd_setup(&vkbd);
-   if (!_vkbd_ui_setup(&vkbd)) goto end;
+   if (!_vkbd_ui_setup(&vkbd))
+       goto end;
 
    ecore_main_loop_begin();
 
