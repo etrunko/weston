@@ -47,12 +47,70 @@ struct vkbd_efl
 
    struct input_panel *ip;
    struct input_method *im;
+   struct input_method_context *im_ctx;
+
+   char *surrounding_text;
+   char *preedit_str;
+
+   unsigned int preedit_style;
+   unsigned int content_hint;
+   unsigned int content_purpose;
+   unsigned int serial;
 };
 
 static void
 _cb_vkbd_delete_request(Ecore_Evas *ee EINA_UNUSED)
 {
    ecore_main_loop_quit();
+}
+
+static void
+_vkbd_commit_preedit_str(struct vkbd_efl *vkbd)
+{
+   if (!vkbd->preedit_str || !strlen(vkbd->preedit_str) == 0)
+      return;
+
+   input_method_context_preedit_cursor(vkbd->im_ctx, vkbd->serial, 0);
+   input_method_context_preedit_string(vkbd->im_ctx, vkbd->serial, "", "");
+   input_method_context_cursor_position(vkbd->im_ctx, vkbd->serial, 0, 0);
+   input_method_context_commit_string(vkbd->im_ctx, vkbd->serial,vkbd->preedit_str);
+
+   free(vkbd->preedit_str);
+   vkbd->preedit_str = strdup("");
+}
+
+static void
+_vkbd_send_preedit_str(struct vkbd_efl *vkbd, int cursor)
+{
+   unsigned int index = strlen(vkbd->preedit_str);
+
+   if (vkbd->preedit_style)
+      input_method_context_preedit_styling(vkbd->im_ctx, vkbd->serial, 0, index, vkbd->preedit_style);
+
+   if (cursor > 0)
+      index = cursor;
+
+   input_method_context_preedit_cursor(vkbd->im_ctx, vkbd->serial, index);
+   input_method_context_preedit_string(vkbd->im_ctx, vkbd->serial, vkbd->preedit_str, vkbd->preedit_str);
+}
+
+static void
+_vkbd_update_preedit_str(struct vkbd_efl *vkbd, const char *key)
+{
+   char *tmp;
+
+   if (!vkbd->preedit_str)
+      vkbd->preedit_str = strdup("");
+
+   tmp = calloc(1, strlen(vkbd->preedit_str) + strlen(key) + 1);
+   sprintf(tmp, "%s%s", vkbd->preedit_str, key);
+   free(vkbd->preedit_str);
+   vkbd->preedit_str = tmp;
+
+   if (strcmp(key, " ") == 0)
+      _vkbd_commit_preedit_str(vkbd);
+   else
+      _vkbd_send_preedit_str(vkbd, -1);
 }
 
 static void
@@ -63,39 +121,162 @@ _cb_vkbd_on_key_down(void *data, Evas_Object *obj, const char *emission EINA_UNU
     const char *group, *key;
 
     src = strdup(source);
-    printf("SOURCE = %s\n", source);
-
     group = strtok(src, ":");
     key = strtok(NULL, ":");
     if (key == NULL)
         key = ":";
 
-    if (strcmp(key, "ABC")   == 0 ||
-        strcmp(key, ".?123") == 0 ||
-        strcmp(key, ".?12")  == 0 ||
-        strcmp(key, "#+=")   == 0)
+    if (strcmp(key, "ABC")   == 0 || strcmp(key, ".?123") == 0 ||
+        strcmp(key, ".?12")  == 0 || strcmp(key, "#+=")   == 0 ||
+        strcmp(key, "shift") == 0)
       {
-         printf("ignoring special key\n");
+         printf("Ignoring special key '%s'\n", key);
          goto end;
       }
     else if (strcmp(key, "backspace") == 0)
       {
-      }
-    else if (strcmp(key, " ") == 0)
-      {
-      }
-    else if (strcmp(key, "shift") == 0)
-      {
+         if (strlen(vkbd->preedit_str) == 0)
+              input_method_context_delete_surrounding_text(vkbd->im_ctx, vkbd->serial, -1, 1);
+         else
+           {
+              vkbd->preedit_str[strlen(vkbd->preedit_str) - 1] = '\0';
+              _vkbd_send_preedit_str(vkbd, -1);
+           }
+
+         goto end;
       }
     else if (strcmp(key, "enter") == 0)
       {
+         _vkbd_commit_preedit_str(vkbd);
+         /* input_method_context_keysym(vkbd->im_ctx, vkbd->serial, time, XKB_KEY_Return, key_state, mod_mask); */
+         goto end;
       }
 
     printf("KEY = '%s'\n", key);
 
+    _vkbd_update_preedit_str(vkbd, key);
+
 end:
     free(src);
 }
+
+static void
+_vkbd_im_ctx_surrounding_text(void *data, struct input_method_context *im_ctx, const char *text, uint32_t cursor, uint32_t anchor)
+{
+   struct vkbd_efl *vkbd = data;
+
+   printf("%s()\n", __FUNCTION__);
+   free(vkbd->surrounding_text);
+   vkbd->surrounding_text = strdup(text);
+}
+
+static void
+_vkbd_im_ctx_reset(void *data, struct input_method_context *im_ctx, uint32_t serial)
+{
+   struct vkbd_efl *vkbd = data;
+
+   printf("%s()\n", __FUNCTION__);
+
+   if (strlen(vkbd->preedit_str))
+     {
+        input_method_context_preedit_cursor(im_ctx, serial, 0);
+        input_method_context_preedit_string(im_ctx, serial, "", "");
+        free(vkbd->preedit_str);
+        vkbd->preedit_str = strdup("");
+     }
+
+   vkbd->serial = serial;
+}
+
+static void
+_vkbd_im_ctx_content_type(void *data, struct input_method_context *im_ctx, uint32_t hint, uint32_t purpose)
+{
+   struct vkbd_efl *vkbd = data;
+
+   printf("%s()\n", __FUNCTION__);
+   vkbd->content_hint = hint;
+   vkbd->content_purpose = purpose;
+}
+
+static void
+_vkbd_im_ctx_invoke_action(void *data, struct input_method_context *im_ctx, uint32_t button, uint32_t index)
+{
+   struct vkbd_efl *vkbd = data;
+
+   printf("%s()\n", __FUNCTION__);
+   if (button != BTN_LEFT)
+      return;
+
+   _vkbd_send_preedit_str(vkbd, index);
+}
+
+static void
+_vkbd_im_ctx_commit(void *data, struct input_method_context *im_ctx)
+{
+   struct vkbd_efl *vkbd = data;
+
+   printf("%s()\n", __FUNCTION__);
+   if (vkbd->surrounding_text)
+      fprintf(stderr, "Surrounding text updated: %s\n", vkbd->surrounding_text);
+}
+
+static const struct input_method_context_listener vkbd_im_context_listener = {
+     _vkbd_im_ctx_surrounding_text,
+     _vkbd_im_ctx_reset,
+     _vkbd_im_ctx_content_type,
+     _vkbd_im_ctx_invoke_action,
+     _vkbd_im_ctx_commit
+};
+
+static void
+_vkbd_im_activate(void *data, struct input_method *input_method, struct input_method_context *im_ctx, uint32_t serial)
+{
+   struct vkbd_efl *vkbd = data;
+   struct wl_array modifiers_map;
+
+   if (vkbd->im_ctx)
+      input_method_context_destroy(vkbd->im_ctx);
+
+   if (vkbd->preedit_str)
+      free(vkbd->preedit_str);
+
+   vkbd->preedit_str = strdup("");
+   vkbd->serial = serial;
+
+   vkbd->im_ctx = im_ctx;
+   input_method_context_add_listener(im_ctx, &vkbd_im_context_listener, vkbd);
+
+   /*
+   wl_array_init(&modifiers_map);
+
+   keysym_modifiers_add(&modifiers_map, "Shift");
+   keysym_modifiers_add(&modifiers_map, "Control");
+   keysym_modifiers_add(&modifiers_map, "Mod1");
+
+   input_method_context_modifiers_map(im_ctx, &modifiers_map);
+
+   vkbd->keysym.shift_mask = keysym_modifiers_get_mask(&modifiers_map, "Shift");
+
+   wl_array_release(&modifiers_map);
+   */
+}
+
+static void
+_vkbd_im_deactivate(void *data, struct input_method *input_method, struct input_method_context *im_ctx)
+{
+   struct vkbd_efl *vkbd = data;
+
+   if (!vkbd->im_ctx)
+      return;
+
+   input_method_context_destroy(vkbd->im_ctx);
+   vkbd->im_ctx = NULL;
+}
+
+static const struct input_method_listener vkbd_im_listener = {
+     _vkbd_im_activate,
+     _vkbd_im_deactivate
+};
 
 static Eina_Bool
 _vkbd_ui_setup(struct vkbd_efl *vkbd)
@@ -167,6 +348,9 @@ _vkbd_setup(struct vkbd_efl *vkbd)
    surface = ecore_wl_window_surface_create(win);
    ips = input_panel_get_input_panel_surface(vkbd->ip, surface);
    input_panel_surface_set_toplevel(ips, INPUT_PANEL_SURFACE_POSITION_CENTER_BOTTOM);
+
+   /* Input method listener */
+   input_method_add_listener(vkbd->im, &vkbd_im_listener, vkbd);
 }
 
 static void
