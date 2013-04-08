@@ -169,6 +169,16 @@ _vkbd_setup(struct vkbd_efl *vkbd)
    input_panel_surface_set_toplevel(ips, INPUT_PANEL_SURFACE_POSITION_CENTER_BOTTOM);
 }
 
+static void
+_vkbd_free(struct vkbd_efl *vkbd)
+{
+   if (vkbd->im_ctx)
+      input_method_context_destroy(vkbd->im_ctx);
+
+   free(vkbd->preedit_str);
+   free(vkbd->surrounding_text);
+}
+
 static Eina_Bool
 _vkbd_check_evas_engine(struct vkbd_efl *vkbd)
 {
@@ -222,12 +232,15 @@ main(int argc EINA_UNUSED, char **argv EINA_UNUSED)
        goto edj_err;
 
    _vkbd_setup(&vkbd);
+
    if (!_vkbd_ui_setup(&vkbd))
        goto end;
 
    ecore_main_loop_begin();
 
    ret = EXIT_SUCCESS;
+
+   _vkbd_free(&vkbd);
 
 end:
    ecore_evas_free(vkbd.ee);
