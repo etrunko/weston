@@ -328,7 +328,7 @@ if test "x$enable_libunwind" = xyes; then
 fi
 AM_CONDITIONAL(HAVE_LIBUNWIND, [test "x$enable_libunwind" = xyes])
 
-PKG_CHECK_MODULES(EFL, [eina evas ecore-evas ecore-wayland edje], [have_efl=yes], [have_efl=no])
+PKG_CHECK_MODULES(EFL, [eina evas ecore ecore-evas ecore-wayland edje], [have_efl=yes], [have_efl=no])
 
 if test "x$have_efl" = xyes; then
         AC_DEFINE(HAVE_EFL, 1, [Build EFL support])
