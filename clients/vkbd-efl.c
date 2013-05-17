@@ -43,19 +43,23 @@
 struct vkbd_efl
 {
    Ecore_Evas *ee;
+   Evas_Object *edje_obj;
    const char *ee_engine;
 
-   struct input_panel *ip;
-   struct input_method *im;
-   struct input_method_context *im_ctx;
+   struct wl_input_panel *ip;
+   struct wl_input_method *im;
+   struct wl_input_method_context *im_ctx;
 
    char *surrounding_text;
    char *preedit_str;
+   char *language;
 
-   unsigned int preedit_style;
-   unsigned int content_hint;
-   unsigned int content_purpose;
-   unsigned int serial;
+   uint32_t text_direction;
+   uint32_t preedit_style;
+   uint32_t content_hint;
+   uint32_t content_purpose;
+   uint32_t serial;
+   uint32_t surrounding_cursor;
 };
 
 static void
@@ -64,16 +68,42 @@ _cb_vkbd_delete_request(Ecore_Evas *ee EINA_UNUSED)
    ecore_main_loop_quit();
 }
 
+static char *
+_vkbd_insert_text(const char *text, uint32_t offset, const char *insert)
+{
+   char *new_text = malloc(strlen(text) + strlen(insert) + 1);
+
+   strncat(new_text, text, offset);
+   new_text[offset] = '\0';
+   strcat(new_text, insert);
+   strcat(new_text, text + offset);
+
+   return new_text;
+}
+
 static void
 _vkbd_commit_preedit_str(struct vkbd_efl *vkbd)
 {
+   char *surrounding_text;
+
    if (!vkbd->preedit_str || !strlen(vkbd->preedit_str) == 0)
       return;
 
-   input_method_context_preedit_cursor(vkbd->im_ctx, vkbd->serial, 0);
-   input_method_context_preedit_string(vkbd->im_ctx, vkbd->serial, "", "");
-   input_method_context_cursor_position(vkbd->im_ctx, vkbd->serial, 0, 0);
-   input_method_context_commit_string(vkbd->im_ctx, vkbd->serial,vkbd->preedit_str);
+   wl_input_method_context_cursor_position(vkbd->im_ctx, 0, 0);
+   wl_input_method_context_commit_string(vkbd->im_ctx, vkbd->serial, vkbd->preedit_str);
+
+   if (vkbd->surrounding_text)
+     {
+        surrounding_text = _vkbd_insert_text(vkbd->surrounding_text, vkbd->surrounding_cursor, vkbd->preedit_str);
+        free(vkbd->surrounding_text);
+        vkbd->surrounding_text = surrounding_text;
+        vkbd->surrounding_cursor += strlen(vkbd->preedit_str);
+     }
+   else
+     {
+        vkbd->surrounding_text = strdup(vkbd->preedit_str);
+        vkbd->surrounding_cursor = strlen(vkbd->preedit_str);
+     }
 
    free(vkbd->preedit_str);
    vkbd->preedit_str = strdup("");
@@ -85,13 +115,13 @@ _vkbd_send_preedit_str(struct vkbd_efl *vkbd, int cursor)
    unsigned int index = strlen(vkbd->preedit_str);
 
    if (vkbd->preedit_style)
-      input_method_context_preedit_styling(vkbd->im_ctx, vkbd->serial, 0, index, vkbd->preedit_style);
+      wl_input_method_context_preedit_styling(vkbd->im_ctx, 0, strlen(vkbd->preedit_str), vkbd->preedit_style);
 
    if (cursor > 0)
       index = cursor;
 
-   input_method_context_preedit_cursor(vkbd->im_ctx, vkbd->serial, index);
-   input_method_context_preedit_string(vkbd->im_ctx, vkbd->serial, vkbd->preedit_str, vkbd->preedit_str);
+   wl_input_method_context_preedit_cursor(vkbd->im_ctx, index);
+   wl_input_method_context_preedit_string(vkbd->im_ctx, vkbd->serial, vkbd->preedit_str, vkbd->preedit_str);
 }
 
 static void
@@ -113,65 +143,89 @@ _vkbd_update_preedit_str(struct vkbd_efl *vkbd, const char *key)
       _vkbd_send_preedit_str(vkbd, -1);
 }
 
-static void
-_cb_vkbd_on_key_down(void *data, Evas_Object *obj, const char *emission EINA_UNUSED, const char *source)
+static Eina_Bool
+_vkbd_is_special_key(const char *key)
 {
-    struct vkbd_efl *vkbd = data;
-    char *src;
-    const char *group, *key;
+   static const char *special_keys[] =
+     {
+        "shift",
+        "ABC",
+        ".?123",
+        ".?12",
+        "#+=",
+        NULL,
+     };
+   const char **k;
 
-    src = strdup(source);
-    group = strtok(src, ":");
-    key = strtok(NULL, ":");
-    if (key == NULL)
-        key = ":";
+   for (k = special_keys; *k != NULL; k++)
+      if (!strcmp(key, *k))
+         return EINA_TRUE;
 
-    if (strcmp(key, "ABC")   == 0 || strcmp(key, ".?123") == 0 ||
-        strcmp(key, ".?12")  == 0 || strcmp(key, "#+=")   == 0 ||
-        strcmp(key, "shift") == 0)
-      {
-         printf("Ignoring special key '%s'\n", key);
-         goto end;
-      }
-    else if (strcmp(key, "backspace") == 0)
-      {
-         if (strlen(vkbd->preedit_str) == 0)
-              input_method_context_delete_surrounding_text(vkbd->im_ctx, vkbd->serial, -1, 1);
-         else
-           {
-              vkbd->preedit_str[strlen(vkbd->preedit_str) - 1] = '\0';
-              _vkbd_send_preedit_str(vkbd, -1);
-           }
-
-         goto end;
-      }
-    else if (strcmp(key, "enter") == 0)
-      {
-         _vkbd_commit_preedit_str(vkbd);
-         /* input_method_context_keysym(vkbd->im_ctx, vkbd->serial, time, XKB_KEY_Return, key_state, mod_mask); */
-         goto end;
-      }
-
-    printf("KEY = '%s'\n", key);
-
-    _vkbd_update_preedit_str(vkbd, key);
-
-end:
-    free(src);
+   return EINA_FALSE;
 }
 
 static void
-_vkbd_im_ctx_surrounding_text(void *data, struct input_method_context *im_ctx, const char *text, uint32_t cursor, uint32_t anchor)
+_cb_vkbd_on_key_down(void *data, Evas_Object *obj, const char *emission EINA_UNUSED, const char *source)
+{
+   struct vkbd_efl *vkbd = data;
+   char *src;
+   const char *group, *key;
+
+   src = strdup(source);
+   group = strtok(src, ":");
+   key = strtok(NULL, ":");
+   if (key == NULL)
+       key = ":";
+
+   if (_vkbd_is_special_key(key))
+     {
+        printf("Ignoring special key '%s'\n", key);
+        goto end;
+     }
+   else if (strcmp(key, "backspace") == 0)
+     {
+        if (strlen(vkbd->preedit_str) == 0)
+             wl_input_method_context_delete_surrounding_text(vkbd->im_ctx, -1, 1);
+        else
+          {
+             vkbd->preedit_str[strlen(vkbd->preedit_str) - 1] = '\0';
+             _vkbd_send_preedit_str(vkbd, -1);
+          }
+
+        goto end;
+     }
+   else if (strcmp(key, "enter") == 0)
+     {
+        _vkbd_commit_preedit_str(vkbd);
+        /* wl_input_method_context_keysym(vkbd->im_ctx, vkbd->serial, time, XKB_KEY_Return, key_state, mod_mask); */
+        goto end;
+     }
+   else if (strcmp(key, "space") == 0)
+     {
+        key = " ";
+     }
+
+   printf("KEY = '%s'\n", key);
+
+   _vkbd_update_preedit_str(vkbd, key);
+
+end:
+   free(src);
+}
+
+static void
+_vkbd_im_ctx_surrounding_text(void *data, struct wl_input_method_context *im_ctx, const char *text, uint32_t cursor, uint32_t anchor)
 {
    struct vkbd_efl *vkbd = data;
 
    printf("%s()\n", __FUNCTION__);
    free(vkbd->surrounding_text);
    vkbd->surrounding_text = strdup(text);
+   vkbd->surrounding_cursor = cursor;
 }
 
 static void
-_vkbd_im_ctx_reset(void *data, struct input_method_context *im_ctx, uint32_t serial)
+_vkbd_im_ctx_reset(void *data, struct wl_input_method_context *im_ctx)
 {
    struct vkbd_efl *vkbd = data;
 
@@ -179,17 +233,13 @@ _vkbd_im_ctx_reset(void *data, struct input_method_context *im_ctx, uint32_t ser
 
    if (strlen(vkbd->preedit_str))
      {
-        input_method_context_preedit_cursor(im_ctx, serial, 0);
-        input_method_context_preedit_string(im_ctx, serial, "", "");
         free(vkbd->preedit_str);
         vkbd->preedit_str = strdup("");
      }
-
-   vkbd->serial = serial;
 }
 
 static void
-_vkbd_im_ctx_content_type(void *data, struct input_method_context *im_ctx, uint32_t hint, uint32_t purpose)
+_vkbd_im_ctx_content_type(void *data, struct wl_input_method_context *im_ctx, uint32_t hint, uint32_t purpose)
 {
    struct vkbd_efl *vkbd = data;
 
@@ -199,7 +249,7 @@ _vkbd_im_ctx_content_type(void *data, struct input_method_context *im_ctx, uint3
 }
 
 static void
-_vkbd_im_ctx_invoke_action(void *data, struct input_method_context *im_ctx, uint32_t button, uint32_t index)
+_vkbd_im_ctx_invoke_action(void *data, struct wl_input_method_context *im_ctx, uint32_t button, uint32_t index)
 {
    struct vkbd_efl *vkbd = data;
 
@@ -211,69 +261,98 @@ _vkbd_im_ctx_invoke_action(void *data, struct input_method_context *im_ctx, uint
 }
 
 static void
-_vkbd_im_ctx_commit(void *data, struct input_method_context *im_ctx)
+_vkbd_im_ctx_commit_state(void *data, struct wl_input_method_context *im_ctx, uint32_t serial)
 {
    struct vkbd_efl *vkbd = data;
 
    printf("%s()\n", __FUNCTION__);
    if (vkbd->surrounding_text)
       fprintf(stderr, "Surrounding text updated: %s\n", vkbd->surrounding_text);
+
+   vkbd->serial = serial;
+   /* FIXME */
+   wl_input_method_context_language(im_ctx, vkbd->serial, "en");//vkbd->language);
+   wl_input_method_context_text_direction(im_ctx, vkbd->serial, WL_TEXT_INPUT_TEXT_DIRECTION_LTR);//vkbd->text_direction);
 }
 
-static const struct input_method_context_listener vkbd_im_context_listener = {
+static void
+_vkbd_im_ctx_preferred_language(void *data, struct wl_input_method_context *im_ctx, const char *language)
+{
+   struct vkbd_efl *vkbd = data;
+
+   if (vkbd->language)
+      free(vkbd->language);
+
+   vkbd->language = NULL;
+
+   if (language)
+      vkbd->language = strdup(language);
+}
+
+static const struct wl_input_method_context_listener vkbd_im_context_listener = {
      _vkbd_im_ctx_surrounding_text,
      _vkbd_im_ctx_reset,
      _vkbd_im_ctx_content_type,
      _vkbd_im_ctx_invoke_action,
-     _vkbd_im_ctx_commit
+     _vkbd_im_ctx_commit_state,
+     _vkbd_im_ctx_preferred_language,
 };
 
 static void
-_vkbd_im_activate(void *data, struct input_method *input_method, struct input_method_context *im_ctx, uint32_t serial)
+_vkbd_im_activate(void *data, struct wl_input_method *im, struct wl_input_method_context *im_ctx)
 {
    struct vkbd_efl *vkbd = data;
    struct wl_array modifiers_map;
 
    if (vkbd->im_ctx)
-      input_method_context_destroy(vkbd->im_ctx);
+      wl_input_method_context_destroy(vkbd->im_ctx);
 
    if (vkbd->preedit_str)
       free(vkbd->preedit_str);
 
    vkbd->preedit_str = strdup("");
-   vkbd->serial = serial;
+   vkbd->content_hint = 0;
+   vkbd->content_purpose = 0;
+   free(vkbd->language);
+   vkbd->language = NULL;
+   free(vkbd->surrounding_text);
+   vkbd->surrounding_text = NULL;
+   vkbd->serial = 0;
 
    vkbd->im_ctx = im_ctx;
-   input_method_context_add_listener(im_ctx, &vkbd_im_context_listener, vkbd);
+   wl_input_method_context_add_listener(im_ctx, &vkbd_im_context_listener, vkbd);
 
    /*
    wl_array_init(&modifiers_map);
-
    keysym_modifiers_add(&modifiers_map, "Shift");
    keysym_modifiers_add(&modifiers_map, "Control");
    keysym_modifiers_add(&modifiers_map, "Mod1");
-
-   input_method_context_modifiers_map(im_ctx, &modifiers_map);
-
+   wl_input_method_context_modifiers_map(context, &modifiers_map);
    vkbd->keysym.shift_mask = keysym_modifiers_get_mask(&modifiers_map, "Shift");
-
    wl_array_release(&modifiers_map);
    */
+
+   /* FIXME */
+   wl_input_method_context_language(im_ctx, vkbd->serial, "en");//vkbd->language);
+   wl_input_method_context_text_direction(im_ctx, vkbd->serial, WL_TEXT_INPUT_TEXT_DIRECTION_LTR);//vkbd->text_direction);
+
+   evas_object_show(vkbd->edje_obj);
 }
 
 static void
-_vkbd_im_deactivate(void *data, struct input_method *input_method, struct input_method_context *im_ctx)
+_vkbd_im_deactivate(void *data, struct wl_input_method *im, struct wl_input_method_context *im_ctx)
 {
    struct vkbd_efl *vkbd = data;
 
    if (!vkbd->im_ctx)
       return;
 
-   input_method_context_destroy(vkbd->im_ctx);
+   wl_input_method_context_destroy(vkbd->im_ctx);
    vkbd->im_ctx = NULL;
+   evas_object_hide(vkbd->edje_obj);
 }
 
-static const struct input_method_listener vkbd_im_listener = {
+static const struct wl_input_method_listener vkbd_im_listener = {
      _vkbd_im_activate,
      _vkbd_im_deactivate
 };
@@ -283,42 +362,40 @@ _vkbd_ui_setup(struct vkbd_efl *vkbd)
 {
    static const char path[PATH_MAX] = PKGLIBEXECDIR"/iclone.edj";
    Evas *evas;
-   Evas_Object *edje_obj;
    Evas_Coord w, h;
 
    ecore_evas_alpha_set(vkbd->ee, EINA_TRUE);
    ecore_evas_title_set(vkbd->ee, "EFL virtual keyboard");
 
    evas = ecore_evas_get(vkbd->ee);
-   edje_obj = edje_object_add(evas);
-   ecore_evas_object_associate(vkbd->ee, edje_obj, ECORE_EVAS_OBJECT_ASSOCIATE_BASE);
+   vkbd->edje_obj = edje_object_add(evas);
+   /*ecore_evas_object_associate(vkbd->ee, vkbd->edje_obj, ECORE_EVAS_OBJECT_ASSOCIATE_BASE);*/
 
-   if (!edje_object_file_set(edje_obj, path, "main"))
+   if (!edje_object_file_set(vkbd->edje_obj, path, "main"))
      {
-        int err = edje_object_load_error_get(edje_obj);
-        fprintf(stderr, "error loading the edje file:%s\n", edje_load_error_str(err));
+        int err = edje_object_load_error_get(vkbd->edje_obj);
+        printf("Error: unable to load the edje file:%s\n", edje_load_error_str(err));
         return EINA_FALSE;
      }
 
-   edje_object_size_min_get(edje_obj, &w, &h);
+   edje_object_size_min_get(vkbd->edje_obj, &w, &h);
    if (w == 0 || h == 0)
      {
-        edje_object_size_min_restricted_calc(edje_obj, &w, &h, w, h);
+        edje_object_size_min_restricted_calc(vkbd->edje_obj, &w, &h, w, h);
         if (w == 0 || h == 0)
-           edje_object_parts_extends_calc(edje_obj, NULL, NULL, &w, &h);
+           edje_object_parts_extends_calc(vkbd->edje_obj, NULL, NULL, &w, &h);
      }
 
-   evas_object_resize(edje_obj, w, h);
-   evas_object_size_hint_min_set(edje_obj, w, h);
-   evas_object_size_hint_max_set(edje_obj, w, h);
-   evas_object_move(edje_obj, 0, 0);
-   evas_object_show(edje_obj);
+   ecore_evas_move_resize(vkbd->ee, 0, 0, w, h);
+   evas_object_move(vkbd->edje_obj, 0, 0);
+   evas_object_resize(vkbd->edje_obj, w, h);
+   evas_object_size_hint_min_set(vkbd->edje_obj, w, h);
+   evas_object_size_hint_max_set(vkbd->edje_obj, w, h);
 
-   edje_object_signal_callback_add(edje_obj, "key_down", "*", _cb_vkbd_on_key_down, vkbd);
+   edje_object_signal_callback_add(vkbd->edje_obj, "key_down", "*", _cb_vkbd_on_key_down, vkbd);
    ecore_evas_callback_delete_request_set(vkbd->ee, _cb_vkbd_delete_request);
 
    ecore_evas_show(vkbd->ee);
-
    return EINA_TRUE;
 }
 
@@ -331,34 +408,38 @@ _vkbd_setup(struct vkbd_efl *vkbd)
 
    Ecore_Wl_Window *win;
    struct wl_surface *surface;
-   struct input_panel_surface *ips;
+   struct wl_output *output = NULL;
+   struct wl_input_panel_surface *ips;
 
    globals = ecore_wl_globals_get();
    registry = ecore_wl_registry_get();
    wl_list_for_each(global, globals, link)
      {
-        if (strcmp(global->interface, "input_panel") == 0)
-           vkbd->ip = wl_registry_bind(registry, global->id, &input_panel_interface, 1);
-        else if (strcmp(global->interface, "input_method") == 0)
-           vkbd->im = wl_registry_bind(registry, global->id, &input_method_interface, 1);
+        if (strcmp(global->interface, "wl_input_panel") == 0)
+           vkbd->ip = wl_registry_bind(registry, global->id, &wl_input_panel_interface, 1);
+        else if (strcmp(global->interface, "wl_input_method") == 0)
+           vkbd->im = wl_registry_bind(registry, global->id, &wl_input_method_interface, 1);
+        else if (strcmp(global->interface, "wl_output") == 0)
+           output = wl_registry_bind(registry, global->id, &wl_output_interface, 1);
      }
 
    /* Set input panel surface */
    win = ecore_evas_wayland_window_get(vkbd->ee);
    surface = ecore_wl_window_surface_create(win);
-   ips = input_panel_get_input_panel_surface(vkbd->ip, surface);
-   input_panel_surface_set_toplevel(ips, INPUT_PANEL_SURFACE_POSITION_CENTER_BOTTOM);
+   ips = wl_input_panel_get_input_panel_surface(vkbd->ip, surface);
+   wl_input_panel_surface_set_toplevel(ips, output, WL_INPUT_PANEL_SURFACE_POSITION_CENTER_BOTTOM);
 
    /* Input method listener */
-   input_method_add_listener(vkbd->im, &vkbd_im_listener, vkbd);
+   wl_input_method_add_listener(vkbd->im, &vkbd_im_listener, vkbd);
 }
 
 static void
 _vkbd_free(struct vkbd_efl *vkbd)
 {
    if (vkbd->im_ctx)
-      input_method_context_destroy(vkbd->im_ctx);
+      wl_input_method_context_destroy(vkbd->im_ctx);
 
+   evas_object_del(vkbd->edje_obj);
    free(vkbd->preedit_str);
    free(vkbd->surrounding_text);
 }
@@ -413,12 +494,15 @@ main(int argc EINA_UNUSED, char **argv EINA_UNUSED)
    vkbd.ee = ecore_evas_new(vkbd.ee_engine, 0, 0, 1, 1, "frame=0");
 
    if (!vkbd.ee)
-       goto edj_err;
+     {
+        printf("ERROR: Unable to create Ecore_Evas object\n");
+        goto edj_err;
+     }
 
    _vkbd_setup(&vkbd);
 
    if (!_vkbd_ui_setup(&vkbd))
-       goto end;
+        goto end;
 
    ecore_main_loop_begin();
 
