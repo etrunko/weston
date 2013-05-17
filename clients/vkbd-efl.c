@@ -73,6 +73,8 @@ _vkbd_insert_text(const char *text, uint32_t offset, const char *insert)
 {
    char *new_text = malloc(strlen(text) + strlen(insert) + 1);
 
+   printf("%s()\n", __FUNCTION__);
+
    strncat(new_text, text, offset);
    new_text[offset] = '\0';
    strcat(new_text, insert);
@@ -88,6 +90,8 @@ _vkbd_commit_preedit_str(struct vkbd_efl *vkbd)
 
    if (!vkbd->preedit_str || !strlen(vkbd->preedit_str) == 0)
       return;
+
+   printf("%s()\n", __FUNCTION__);
 
    wl_input_method_context_cursor_position(vkbd->im_ctx, 0, 0);
    wl_input_method_context_commit_string(vkbd->im_ctx, vkbd->serial, vkbd->preedit_str);
@@ -114,6 +118,8 @@ _vkbd_send_preedit_str(struct vkbd_efl *vkbd, int cursor)
 {
    unsigned int index = strlen(vkbd->preedit_str);
 
+   printf("%s()\n", __FUNCTION__);
+
    if (vkbd->preedit_style)
       wl_input_method_context_preedit_styling(vkbd->im_ctx, 0, strlen(vkbd->preedit_str), vkbd->preedit_style);
 
@@ -128,6 +134,8 @@ static void
 _vkbd_update_preedit_str(struct vkbd_efl *vkbd, const char *key)
 {
    char *tmp;
+
+   printf("%s()\n", __FUNCTION__);
 
    if (!vkbd->preedit_str)
       vkbd->preedit_str = strdup("");
@@ -170,6 +178,8 @@ _cb_vkbd_on_key_down(void *data, Evas_Object *obj, const char *emission EINA_UNU
    struct vkbd_efl *vkbd = data;
    char *src;
    const char *group, *key;
+
+   printf("%s()\n", __FUNCTION__);
 
    src = strdup(source);
    group = strtok(src, ":");
@@ -219,6 +229,7 @@ _vkbd_im_ctx_surrounding_text(void *data, struct wl_input_method_context *im_ctx
    struct vkbd_efl *vkbd = data;
 
    printf("%s()\n", __FUNCTION__);
+
    free(vkbd->surrounding_text);
    vkbd->surrounding_text = strdup(text);
    vkbd->surrounding_cursor = cursor;
@@ -244,6 +255,7 @@ _vkbd_im_ctx_content_type(void *data, struct wl_input_method_context *im_ctx, ui
    struct vkbd_efl *vkbd = data;
 
    printf("%s()\n", __FUNCTION__);
+
    vkbd->content_hint = hint;
    vkbd->content_purpose = purpose;
 }
@@ -254,6 +266,7 @@ _vkbd_im_ctx_invoke_action(void *data, struct wl_input_method_context *im_ctx, u
    struct vkbd_efl *vkbd = data;
 
    printf("%s()\n", __FUNCTION__);
+
    if (button != BTN_LEFT)
       return;
 
@@ -266,6 +279,7 @@ _vkbd_im_ctx_commit_state(void *data, struct wl_input_method_context *im_ctx, ui
    struct vkbd_efl *vkbd = data;
 
    printf("%s()\n", __FUNCTION__);
+
    if (vkbd->surrounding_text)
       fprintf(stderr, "Surrounding text updated: %s\n", vkbd->surrounding_text);
 
@@ -279,6 +293,8 @@ static void
 _vkbd_im_ctx_preferred_language(void *data, struct wl_input_method_context *im_ctx, const char *language)
 {
    struct vkbd_efl *vkbd = data;
+
+   printf("%s()\n", __FUNCTION__);
 
    if (vkbd->language)
       free(vkbd->language);
@@ -303,6 +319,8 @@ _vkbd_im_activate(void *data, struct wl_input_method *im, struct wl_input_method
 {
    struct vkbd_efl *vkbd = data;
    struct wl_array modifiers_map;
+
+   printf("%s()\n", __FUNCTION__);
 
    if (vkbd->im_ctx)
       wl_input_method_context_destroy(vkbd->im_ctx);
@@ -343,6 +361,8 @@ static void
 _vkbd_im_deactivate(void *data, struct wl_input_method *im, struct wl_input_method_context *im_ctx)
 {
    struct vkbd_efl *vkbd = data;
+
+   printf("%s()\n", __FUNCTION__);
 
    if (!vkbd->im_ctx)
       return;
@@ -410,6 +430,8 @@ _vkbd_setup(struct vkbd_efl *vkbd)
    struct wl_surface *surface;
    struct wl_output *output = NULL;
    struct wl_input_panel_surface *ips;
+
+   printf("%s()\n", __FUNCTION__);
 
    globals = ecore_wl_globals_get();
    registry = ecore_wl_registry_get();
