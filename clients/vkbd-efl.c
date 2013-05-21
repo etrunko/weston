@@ -296,13 +296,20 @@ _vkbd_im_ctx_preferred_language(void *data, struct wl_input_method_context *im_c
 
    printf("%s()\n", __FUNCTION__);
 
-   if (vkbd->language)
-      free(vkbd->language);
+   if (language && vkbd->language && !strcmp(language, vkbd->language))
+      return;
 
-   vkbd->language = NULL;
+   if (vkbd->language)
+     {
+        free(vkbd->language);
+        vkbd->language = NULL;
+     }
 
    if (language)
-      vkbd->language = strdup(language);
+     {
+        vkbd->language = strdup(language);
+        printf("Language changed, new: '%s\n", language);
+     }
 }
 
 static const struct wl_input_method_context_listener vkbd_im_context_listener = {
