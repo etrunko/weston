@@ -256,6 +256,21 @@ _vkbd_im_ctx_content_type(void *data, struct wl_input_method_context *im_ctx, ui
 
    printf("%s()\n", __FUNCTION__);
 
+   switch (purpose)
+     {
+      case WL_TEXT_INPUT_CONTENT_PURPOSE_DIGITS:
+      case WL_TEXT_INPUT_CONTENT_PURPOSE_NUMBER:
+           {
+              edje_object_signal_emit(vkbd->edje_obj, "show,numeric", "");
+              break;
+           }
+      default:
+           {
+              edje_object_signal_emit(vkbd->edje_obj, "show,alphanumeric", "");
+              break;
+           }
+     }
+
    vkbd->content_hint = hint;
    vkbd->content_purpose = purpose;
 }
