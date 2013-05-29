@@ -45,6 +45,7 @@ struct vkbd_efl
    Ecore_Evas *ee;
    Evas_Object *edje_obj;
    const char *ee_engine;
+   char **special_keys;
 
    struct wl_input_panel *ip;
    struct wl_input_method *im;
@@ -152,21 +153,15 @@ _vkbd_update_preedit_str(struct vkbd_efl *vkbd, const char *key)
 }
 
 static Eina_Bool
-_vkbd_is_special_key(const char *key)
+_vkbd_is_special_key(struct vkbd_efl *vkbd, const char *key)
 {
-   static const char *special_keys[] =
-     {
-        "shift",
-        "ABC",
-        ".?123",
-        ".?12",
-        "#+=",
-        NULL,
-     };
-   const char **k;
+   int i;
 
-   for (k = special_keys; *k != NULL; k++)
-      if (!strcmp(key, *k))
+   if (!vkbd->special_keys)
+       return EINA_FALSE;
+
+   for (i = 0; vkbd->special_keys[i] != NULL; i++)
+      if (!strcmp(key, vkbd->special_keys[i]))
          return EINA_TRUE;
 
    return EINA_FALSE;
@@ -187,7 +182,7 @@ _cb_vkbd_on_key_down(void *data, Evas_Object *obj, const char *emission EINA_UNU
    if (key == NULL)
        key = ":";
 
-   if (_vkbd_is_special_key(key))
+   if (_vkbd_is_special_key(vkbd, key))
      {
         printf("Ignoring special key '%s'\n", key);
         goto end;
@@ -403,8 +398,10 @@ static Eina_Bool
 _vkbd_ui_setup(struct vkbd_efl *vkbd)
 {
    static const char path[PATH_MAX] = PKGLIBEXECDIR"/iclone.edj";
+
    Evas *evas;
    Evas_Coord w, h;
+   char *special_keys;
 
    ecore_evas_alpha_set(vkbd->ee, EINA_TRUE);
    ecore_evas_title_set(vkbd->ee, "EFL virtual keyboard");
@@ -437,6 +434,19 @@ _vkbd_ui_setup(struct vkbd_efl *vkbd)
    edje_object_signal_callback_add(vkbd->edje_obj, "key_down", "*", _cb_vkbd_on_key_down, vkbd);
    ecore_evas_callback_delete_request_set(vkbd->ee, _cb_vkbd_delete_request);
 
+   /* special keys */
+   special_keys = edje_file_data_get(path, "special_keys");
+   if (!special_keys)
+     {
+        printf("Special keys file not found in '%s'\n", path);
+        goto end;
+     }
+
+   printf("SPECIAL KEYS = %s\n", special_keys);
+   vkbd->special_keys = eina_str_split(special_keys, "\n", 0);
+   free(special_keys);
+
+end:
    ecore_evas_show(vkbd->ee);
    return EINA_TRUE;
 }
@@ -482,6 +492,12 @@ _vkbd_free(struct vkbd_efl *vkbd)
 {
    if (vkbd->im_ctx)
       wl_input_method_context_destroy(vkbd->im_ctx);
+
+   if (vkbd->special_keys)
+     {
+        free(*vkbd->special_keys);
+        free(vkbd->special_keys);
+     }
 
    evas_object_del(vkbd->edje_obj);
    free(vkbd->preedit_str);

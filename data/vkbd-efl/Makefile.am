@@ -10,6 +10,7 @@ filesdir = $(pkglibexecdir)
 files_DATA = iclone.edj
 
 ICLONE_FILES = iclone/iclone.edc \
+	       iclone/specialkeys.txt \
 	       iclone/images/keyboard-background.png \
 	       iclone/images/backspace.png \
 	       iclone/images/key-special.png \

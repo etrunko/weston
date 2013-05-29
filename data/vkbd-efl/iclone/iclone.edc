@@ -22,6 +22,10 @@ styles {
    }
 }
 
+data {
+   file: "special_keys" "iclone/specialkeys.txt";
+}
+
 collections {
    group {
       name: "main";
